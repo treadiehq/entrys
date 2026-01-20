@@ -217,11 +217,11 @@ const highlightedCode = computed(() => {
 <template>
   <div class="flex-1 flex flex-col bg-black antialiased font-mono relative">
     <div class="radial-gradient absolute top-0 md:right-14 right-5"></div>
-    <div class="flex-1">
-      <header class="relative z-10">
-        <div class="max-w-4xl mx-auto px-6 py-16 pb-10">
-          <div class="flex items-center justify-between mb-4">
-            <div class="gap-3 max-w-md">
+    <div class="flex-1 flex items-center flex-col justify-center">
+      <header class="relative z-10 w-full max-w-xl mx-auto">
+        <div class="py-16 pb-10">
+          <div class="flex items-center justify-between mb-4 w-full">
+            <div class="gap-3">
               <span class="font-semibold text-3xl text-white">entrys</span>
             </div>
             <div class="flex items-center gap-4">
@@ -249,9 +249,9 @@ const highlightedCode = computed(() => {
           <p class="text-gray-400 text-sm max-w-sm">Give your AI agents a single entry point to access internal APIs and tools.</p>
         </div>
       </header>
-      <section class="max-w-4xl mx-auto px-6 py-16 pt-0 relative z-10">
+      <section class="max-w-xl w-full mx-auto py-16 pt-0 relative z-10">
         <div class="bg-gray-500/10 border border-gray-500/10 rounded-xl overflow-hidden relative z-10">
-          <div class="bg-gray-500/10 px-4 py-2 flex items-center justify-between">
+          <div class="bg-gray-500/10 border-b border-gray-500/10 px-4 py-1.5 flex items-center justify-between">
             <div class="flex items-center gap-4">
               <div class="flex items-center gap-1.5">
                 <div class="w-3 h-3 rounded-full bg-red-400/80"></div>
@@ -291,15 +291,15 @@ const highlightedCode = computed(() => {
             </button>
           </div>
 
-          <div class="bg-black/50 p-6">
+          <div class="bg-gray-500/10 p-6 h-[250px]">
             <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed"><code v-html="highlightedCode" :key="codeExampleTab"></code></pre>
           </div>
         </div>
       </section>
     </div>
 
-    <footer class="border-t border-gray-500/10 mt-auto">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer class="">
+      <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="border-t border-transparent flex flex-col md:flex-row items-center justify-between py-3">
           <div class="flex items-center justify-center gap-3 relative">
             <p class="text-xs leading-6 font-medium text-gray-500 xl:text-center">

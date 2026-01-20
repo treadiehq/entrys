@@ -26,7 +26,8 @@
 
 /* Base styles */
 html {
-  font-family: 'Geist', -apple-system, BlinkMacSystemFont, Inter, Segoe UI, Roboto, Noto Sans, Ubuntu, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, Inter, Segoe UI, Roboto, Noto Sans, Ubuntu, sans-serif;
+  /* font-family: 'Geist', -apple-system, BlinkMacSystemFont, Inter, Segoe UI, Roboto, Noto Sans, Ubuntu, sans-serif; */
   font-feature-settings: "calt", "dlig", "liga", "kern", "ss01", "ss02", "ss03", "ss04", "ss07", "ss08", "tnum", "cv02", "cv03", "cv04", "cv11";
   font-synthesis: none;
   scroll-behavior: smooth;
