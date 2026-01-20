@@ -7,10 +7,10 @@ export type { InvokeResponse, InvokeSuccessResponse, InvokeErrorResponse } from 
  * Configuration options for Entry
  */
 export interface EntryOptions {
-  /** API key for authentication (starts with "ent_") */
-  apiKey: string;
-  /** Base URL of the entrys gateway (e.g., "https://api.yourproduct.com") */
-  baseUrl: string;
+  /** API key for authentication (starts with "ent_"). Defaults to ENTRYS_API_KEY env var */
+  apiKey?: string;
+  /** Base URL of the entrys gateway. Defaults to ENTRYS_BASE_URL env var or https://api.entrys.dev */
+  baseUrl?: string;
   /** Optional custom fetch implementation (for testing or custom environments) */
   fetch?: typeof fetch;
 }
@@ -56,12 +56,9 @@ export class EntryError extends Error {
  * 
  * @example
  * ```typescript
- * import { Entry } from "@entrys/client";
+ * import Entry from "@entrys/client";
  * 
- * const entry = new Entry({
- *   apiKey: process.env.AGENT_API_KEY,
- *   baseUrl: "https://api.yourproduct.com"
- * });
+ * const entry = new Entry();
  * 
  * const customer = await entry.invoke("get_customer", {
  *   params: { id: "123" }
@@ -73,9 +70,16 @@ export class Entry {
   private apiKey: string;
   private fetchFn: typeof fetch;
 
-  constructor(options: EntryOptions) {
-    this.baseUrl = options.baseUrl.replace(/\/$/, ''); // Remove trailing slash
-    this.apiKey = options.apiKey;
+  constructor(options: EntryOptions = {}) {
+    const apiKey = options.apiKey ?? (typeof process !== 'undefined' ? process.env?.ENTRYS_API_KEY : undefined);
+    const baseUrl = options.baseUrl ?? (typeof process !== 'undefined' ? process.env?.ENTRYS_BASE_URL : undefined) ?? 'https://api.entrys.co';
+    
+    if (!apiKey) {
+      throw new Error('Entry: apiKey is required. Pass it in options or set ENTRYS_API_KEY environment variable.');
+    }
+    
+    this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+    this.apiKey = apiKey;
     this.fetchFn = options.fetch ?? fetch;
   }
 
@@ -179,12 +183,14 @@ export class Entry {
   }
 }
 
-// Legacy aliases for backward compatibility
-export const createClient = (options: EntryOptions) => new Entry(options);
-export const AgentGateway = Entry; // Backward compatibility
-export type AgentGatewayOptions = EntryOptions; // Backward compatibility
-export const AgentGatewayError = EntryError; // Backward compatibility
-export const ATGError = EntryError; // Legacy alias
+// Helper function to create client
+export const createClient = (options?: EntryOptions) => new Entry(options);
 
-// Default export
+// Legacy aliases for backward compatibility
+export const AgentGateway = Entry;
+export type AgentGatewayOptions = EntryOptions;
+export const AgentGatewayError = EntryError;
+export const ATGError = EntryError;
+
+// Default export for simpler imports: import Entry from '@entrys/client'
 export default Entry;

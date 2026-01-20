@@ -3,7 +3,7 @@ const route = useRoute()
 const env = useState<'staging' | 'prod'>('currentEnv', () => 'staging')
 
 const navItems = [
-  { path: '/', label: 'Overview' },
+  { path: '/dashboard', label: 'Dashboard' },
   { path: '/tools', label: 'Tools' },
   { path: '/agents', label: 'Agents' },
   { path: '/audit', label: 'Audit Log' },
@@ -11,13 +11,12 @@ const navItems = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-black">
-    <!-- Header -->
+  <div class="min-h-screen bg-black antialiased">
     <header class="border-b border-gray-500/15 bg-black/80 backdrop-blur-xl sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between">
         <!-- Logo & Workspace -->
         <div class="flex items-center gap-3">
-          <NuxtLink to="/" class="w-6 h-6 rounded-lg bg-gray-500/20 border border-gray-500/10 flex items-center justify-center">
+          <NuxtLink to="/dashboard" class="w-6 h-6 rounded-lg bg-gray-500/20 border border-gray-500/10 flex items-center justify-center">
             <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>

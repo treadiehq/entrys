@@ -1,467 +1,352 @@
 <script setup lang="ts">
-import type { ToolResponse, AuditLogResponse, AgentKeyResponse } from '@entrys/shared'
+definePageMeta({
+  layout: 'landing'
+})
 
 useHead({
-  title: 'Overview - Entrys'
+  title: 'Entrys - The entry point for agent tool calls'
 })
 
-const { env, fetchApi } = useApi()
-const config = useRuntimeConfig()
-
-const tools = ref<ToolResponse[]>([])
-const agents = ref<AgentKeyResponse[]>([])
-const logs = ref<AuditLogResponse[]>([])
-const loading = ref(true)
-
-const selectedTool = ref<ToolResponse | null>(null)
-const selectedAgent = ref<AgentKeyResponse | null>(null)
-const showQuickstartModal = ref(false)
-const codeTab = ref<'curl' | 'sdk'>('curl')
-
+const installTab = ref<'pnpm' | 'npm' | 'yarn' | 'curl'>('pnpm')
+const codeTab = ref<'snippet' | 'playground'>('snippet')
+const codeExampleTab = ref<'node' | 'curl'>('node')
 const toast = useToast()
 
-function copyCommand() {
-  const code = codeTab.value === 'curl' ? curlCommand.value : sdkCommand.value
-  navigator.clipboard.writeText(code)
-  toast.success('Code copied to clipboard')
+const installCommands = {
+  pnpm: 'pnpm install',
+  npm: 'npm install',
+  yarn: 'yarn install',
+  curl: 'curl -fsSL https://github.com/treadiehq/entrys | bash'
 }
 
-async function loadData() {
-  loading.value = true
-  try {
-    const [toolsData, agentsData, logsData] = await Promise.all([
-      fetchApi<ToolResponse[]>('/tools'),
-      fetchApi<AgentKeyResponse[]>('/agent-keys'),
-      fetchApi<AuditLogResponse[]>('/audit', { query: { limit: 10 } }),
-    ])
-    tools.value = toolsData
-    agents.value = agentsData.filter(a => !a.isRevoked)
-    logs.value = logsData
-    
-    if (tools.value.length > 0) selectedTool.value = tools.value[0]
-    if (agents.value.length > 0) selectedAgent.value = agents.value[0]
-  } catch (err) {
-    console.error('Failed to load data:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-// Reload data when environment changes
-watch(env, () => loadData())
-
-onMounted(() => loadData())
-
-// Generate curl command
-const curlCommand = computed(() => {
-  if (!selectedTool.value) return ''
-  const tool = selectedTool.value
-  const apiUrl = config.public.apiUrl || 'http://localhost:3001'
-  
-  const sampleBody = JSON.stringify({
-    input: { message: 'Hello from agent!', email: 'user@example.com' },
-  }, null, 2)
-  
-  return `curl -X POST "${apiUrl}/v1/invoke/${tool.logicalName}" \\
-  -H "Content-Type: application/json" \\
-  -H "x-api-key: YOUR_AGENT_KEY" \\
-  -d '${sampleBody}'`
-})
-
-// Generate SDK command
-const sdkCommand = computed(() => {
-  if (!selectedTool.value) return ''
-  const tool = selectedTool.value
-  const apiUrl = config.public.apiUrl || 'http://localhost:3001'
-  
-  return `import { Entry } from '@entrys/client';
-
+const codeExamples = {
+  node: `import Entry from '@entrys/client';
 const entry = new Entry({
-  apiKey: 'YOUR_AGENT_KEY',
-  baseUrl: '${apiUrl}',
+  apiKey: process.env.ENTRYS_API_KEY
 });
-
-const result = await entry.invoke('${tool.logicalName}', {
-  input: {
-    message: 'Hello from agent!',
-    email: 'user@example.com',
-  },
+const result = await entry.invoke('get_customer', {
+  params: { id: '123' }
 });
-
-console.log(result.data);`
-})
-
-function formatDate(date: string | Date) {
-  return new Date(date).toLocaleString()
+console.log(result);
+// { name: "Jane Doe", email: "[REDACTED]" }`,
+  curl: `curl -X POST "https://api.entrys.co/v1/invoke/get_customer" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: $ENTRYS_API_KEY" \\
+  -d '{"params": {"id": "123"}}'`
 }
 
-function getDecisionBadge(decision: string) {
-  switch (decision) {
-    case 'allow': return 'badge-green'
-    case 'deny': return 'badge-red'
-    case 'error': return 'badge-yellow'
-    default: return 'badge-blue'
+function copyInstallCommand() {
+  navigator.clipboard.writeText(installCommands[installTab.value])
+  toast.success('Copied to clipboard')
+}
+
+function copyCodeExample() {
+  navigator.clipboard.writeText(codeExamples[codeExampleTab.value])
+  toast.success('Copied to clipboard')
+}
+
+// Use CodeBlock's highlighting logic
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function span(className: string, content: string): string {
+  return `<span class="${className}">${content}</span>`
+}
+
+function highlightBash(code: string): string {
+  const lines = code.split('\n')
+  return lines.map(line => {
+    let result = ''
+    let i = 0
+    
+    while (i < line.length) {
+      if (i === 0 && line.startsWith('curl')) {
+        result += span('text-green-300', 'curl')
+        i += 4
+        continue
+      }
+      
+      if (line[i] === '-' && i > 0 && line[i-1] === ' ' && /[A-Za-z]/.test(line[i+1] || '')) {
+        const flag = '-' + line[i+1]
+        result += span('text-yellow-300', flag)
+        i += 2
+        continue
+      }
+      
+      if (line[i] === '"') {
+        let end = line.indexOf('"', i + 1)
+        if (end === -1) end = line.length
+        const str = line.slice(i, end + 1)
+        result += span('text-amber-200', escapeHtml(str))
+        i = end + 1
+        continue
+      }
+      
+      if (line[i] === "'") {
+        let end = line.lastIndexOf("'")
+        if (end <= i) end = line.length
+        const str = line.slice(i, end + 1)
+        result += span('text-gray-300', escapeHtml(str))
+        i = end + 1
+        continue
+      }
+      
+      if (line[i] === '\\' && i === line.length - 1) {
+        result += span('text-gray-500', '\\')
+        i++
+        continue
+      }
+      
+      result += escapeHtml(line[i])
+      i++
+    }
+    
+    return result
+  }).join('\n')
+}
+
+function highlightTypeScript(code: string): string {
+  // Handle comments first (they can span to end of line)
+  const lines = code.split('\n')
+  const processedLines = lines.map(line => {
+    const commentIndex = line.indexOf('//')
+    if (commentIndex === -1) {
+      return highlightTypeScriptLine(line)
+    }
+    
+    const codePart = line.slice(0, commentIndex)
+    const commentPart = line.slice(commentIndex)
+    return highlightTypeScriptLine(codePart) + span('text-gray-500', escapeHtml(commentPart))
+  })
+  
+  return processedLines.join('\n')
+}
+
+function highlightTypeScriptLine(line: string): string {
+  const tokens: { type: string; value: string }[] = []
+  let i = 0
+  
+  while (i < line.length) {
+    if (/\s/.test(line[i])) {
+      let ws = ''
+      while (i < line.length && /\s/.test(line[i])) {
+        ws += line[i]
+        i++
+      }
+      tokens.push({ type: 'ws', value: ws })
+      continue
+    }
+    
+    if (line[i] === "'") {
+      let str = "'"
+      i++
+      while (i < line.length && line[i] !== "'") {
+        str += line[i]
+        i++
+      }
+      if (i < line.length) {
+        str += "'"
+        i++
+      }
+      tokens.push({ type: 'string', value: str })
+      continue
+    }
+    
+    if (/[a-zA-Z_$]/.test(line[i])) {
+      let word = ''
+      while (i < line.length && /[a-zA-Z0-9_$]/.test(line[i])) {
+        word += line[i]
+        i++
+      }
+      tokens.push({ type: 'word', value: word })
+      continue
+    }
+    
+    tokens.push({ type: 'punct', value: line[i] })
+    i++
   }
+  
+  const keywords = new Set(['import', 'from', 'const', 'let', 'var', 'await', 'async', 'new', 'function', 'return', 'if', 'else', 'console'])
+  
+  let result = ''
+  for (let j = 0; j < tokens.length; j++) {
+    const token = tokens[j]
+    const nextToken = tokens[j + 1]
+    
+    if (token.type === 'ws') {
+      result += token.value
+    } else if (token.type === 'string') {
+      result += span('text-green-300', escapeHtml(token.value))
+    } else if (token.type === 'word') {
+      if (keywords.has(token.value)) {
+        result += span('text-purple-300', token.value)
+      } else if (/^[A-Z]/.test(token.value)) {
+        result += span('text-yellow-300', token.value)
+      } else if (token.value === 'console') {
+        result += span('text-cyan-300', token.value)
+      } else if (nextToken && nextToken.value === '(') {
+        result += span('text-blue-300', token.value)
+      } else {
+        result += span('text-gray-200', token.value)
+      }
+    } else if (token.type === 'punct') {
+      if (token.value === ';') {
+        result += span('text-gray-500', ';')
+      } else if ('{}[]()'.includes(token.value)) {
+        result += span('text-gray-400', token.value)
+      } else if (token.value === '.') {
+        result += span('text-gray-400', '.')
+      } else {
+        result += escapeHtml(token.value)
+      }
+    }
+  }
+  
+  return result
 }
 
-// Detail modal for logs
-const selectedLog = ref<AuditLogResponse | null>(null)
-
-function openDetail(log: AuditLogResponse) {
-  selectedLog.value = log
-}
-
-function closeDetail() {
-  selectedLog.value = null
-}
-
-function formatRedactions(redactions: { type: string; count: number }[]) {
-  if (redactions.length === 0) return '-'
-  return redactions.map(r => `${r.type}: ${r.count}`).join(', ')
-}
-
-// Stats for charts
-const stats = computed(() => {
-  const allowed = logs.value.filter(l => l.decision === 'allow').length
-  const denied = logs.value.filter(l => l.decision === 'deny').length
-  const errored = logs.value.filter(l => l.decision === 'error').length
-  const avgLatency = logs.value.length > 0 
-    ? Math.round(logs.value.reduce((sum, l) => sum + l.latencyMs, 0) / logs.value.length)
-    : 0
-  return { allowed, denied, errored, avgLatency }
+const highlightedCode = computed(() => {
+  const code = codeExamples[codeExampleTab.value]
+  const isTypeScript = codeExampleTab.value === 'node'
+  // Ensure consistent rendering between server and client
+  return isTypeScript ? highlightTypeScript(code) : highlightBash(code)
 })
 </script>
 
 <template>
-  <div class="p-8 max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-xl font-semibold">Overview</h1>
-        <p class="text-sm text-gray-400 mt-1">
-          Quick overview and getting started guide
-        </p>
-      </div>
-      <button 
-        class="btn btn-primary flex items-center gap-2"
-        @click="showQuickstartModal = true"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        Quickstart
-      </button>
-    </div>
-
-    <!-- Loading Skeleton -->
-    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <SkeletonCard />
-      <SkeletonCard />
-      <SkeletonTable class="lg:col-span-2" :rows="5" :cols="5" />
-    </div>
-
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Stats Cards -->
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <p class="text-sm text-gray-400">Tools</p>
-          <NuxtLink to="/tools" class="text-xs text-blue-300 hover:underline">View →</NuxtLink>
-        </div>
-        <p class="text-3xl font-semibold">{{ tools.length }}</p>
-      </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <p class="text-sm text-gray-400">Active Agents</p>
-          <NuxtLink to="/agents" class="text-xs text-blue-300 hover:underline">View →</NuxtLink>
-        </div>
-        <p class="text-3xl font-semibold">{{ agents.length }}</p>
-      </div>
-
-      <div class="card p-5">
-        <p class="text-sm text-gray-400 mb-3">Requests (Recent)</p>
-        <div class="flex items-baseline gap-3">
-          <p class="text-3xl font-semibold">{{ logs.length }}</p>
-          <div class="flex items-center gap-2 text-xs">
-            <span class="text-green-400">{{ stats.allowed }} ok</span>
-            <span v-if="stats.denied > 0" class="text-red-400">{{ stats.denied }} denied</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card p-5">
-        <p class="text-sm text-gray-400 mb-3">Avg Latency</p>
-        <div class="flex items-baseline gap-2">
-          <p class="text-3xl font-semibold">{{ stats.avgLatency }}</p>
-          <span class="text-sm text-gray-400">ms</span>
-        </div>
-      </div>
-
-      <!-- Recent Audit Logs -->
-      <div class="card md:col-span-2 lg:col-span-4">
-        <div class="p-4 border-b border-gray-500/10 flex items-center justify-between">
-          <h2 class="text-sm font-medium flex items-center gap-2">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <span>Recent Activity</span>
-          </h2>
-          <NuxtLink to="/audit" class="text-sm text-blue-300 hover:underline">
-            View all →
-          </NuxtLink>
-        </div>
-        
-        <EmptyState
-          v-if="logs.length === 0"
-          icon="activity"
-          title="No activity yet"
-          description="Once you invoke a tool through the gateway, requests will appear here in real-time."
-        />
-        
-        <table v-else class="table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Tool</th>
-              <th>Agent</th>
-              <th>Decision</th>
-              <th>Latency</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr 
-              v-for="log in logs" 
-              :key="log.id"
-              class="cursor-pointer"
-              @click="openDetail(log)"
-            >
-              <td class="text-xs whitespace-nowrap"><TimeAgo :date="log.createdAt" /></td>
-              <td>
-                <div class="font-mono text-sm">{{ log.toolName }}</div>
-                <div v-if="log.logicalName" class="text-xs text-gray-400">
-                  → {{ log.logicalName }} {{ log.toolVersion }}
-                </div>
-              </td>
-              <td class="text-sm text-gray-400">{{ log.agentLabel }}</td>
-              <td>
-                <span :class="['badge', getDecisionBadge(log.decision)]">
-                  {{ log.decision }}
-                </span>
-              </td>
-              <td class="font-mono text-xs">{{ log.latencyMs }}ms</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Quickstart Modal -->
-    <div v-if="showQuickstartModal" class="modal-backdrop" @click.self="showQuickstartModal = false">
-      <div class="modal max-w-2xl">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Quickstart</span>
-          </h2>
-          <button 
-            class="text-gray-400 hover:text-white transition-colors"
-            @click="showQuickstartModal = false"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <!-- Has both tools and agents -->
-        <template v-if="tools.length > 0 && agents.length > 0">
-          <div class="grid md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label class="text-xs font-medium text-gray-400 block mb-2">
-                Select Tool
-              </label>
-              <select v-model="selectedTool" class="select w-full">
-                <option v-for="tool in tools" :key="tool.id" :value="tool">
-                  {{ tool.displayName }} ({{ tool.logicalName }})
-                </option>
-              </select>
+  <div class="flex-1 flex flex-col bg-black antialiased font-mono relative">
+    <div class="radial-gradient absolute top-0 md:right-14 right-5"></div>
+    <div class="flex-1">
+      <header class="relative z-10">
+        <div class="max-w-4xl mx-auto px-6 py-16 pb-10">
+          <div class="flex items-center justify-between mb-4">
+            <div class="gap-3 max-w-md">
+              <span class="font-semibold text-3xl text-white">entrys</span>
             </div>
-            <div>
-              <label class="text-xs font-medium text-gray-400 block mb-2">
-                Select Agent
-              </label>
-              <select v-model="selectedAgent" class="select w-full">
-                <option v-for="agent in agents" :key="agent.id" :value="agent">
-                  {{ agent.name }} ({{ agent.keyPrefix }}...)
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div v-if="selectedTool">
-            <!-- Code Tabs -->
-            <div class="flex items-center gap-1 mb-3">
-              <button
-                @click="codeTab = 'curl'"
-                class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
-                :class="codeTab === 'curl' 
-                  ? 'bg-gray-500/20 text-white' 
-                  : 'text-gray-400 hover:text-white'"
+            <div class="flex items-center gap-4">
+              <a 
+                href="https://github.com/treadiehq/entrys" 
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-400 hover:text-white transition-colors"
               >
-                curl
-              </button>
-              <button
-                @click="codeTab = 'sdk'"
-                class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
-                :class="codeTab === 'sdk' 
-                  ? 'bg-gray-500/20 text-white' 
-                  : 'text-gray-400 hover:text-white'"
-              >
-                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.75c.612 0 1.154.037 1.627.111a6.38 6.38 0 0 1 1.306.34v2.458a3.95 3.95 0 0 0-.643-.361 5.093 5.093 0 0 0-.717-.26 5.453 5.453 0 0 0-1.426-.2c-.3 0-.573.028-.819.086a2.1 2.1 0 0 0-.623.242c-.17.104-.3.229-.393.374a.888.888 0 0 0-.14.49c0 .196.053.373.156.529.104.156.252.304.443.444s.423.276.696.41c.273.135.582.274.926.416.47.197.892.407 1.266.628.374.222.695.473.963.753.268.279.472.598.614.957.142.359.214.776.214 1.253 0 .657-.125 1.21-.373 1.656a3.033 3.033 0 0 1-1.012 1.085 4.38 4.38 0 0 1-1.487.596c-.566.12-1.163.18-1.79.18a9.916 9.916 0 0 1-1.84-.164 5.544 5.544 0 0 1-1.512-.493v-2.63a5.033 5.033 0 0 0 3.237 1.2c.333 0 .624-.03.872-.09.249-.06.456-.144.623-.25.166-.108.29-.234.373-.38a1.023 1.023 0 0 0-.074-1.089 2.12 2.12 0 0 0-.537-.5 5.597 5.597 0 0 0-.807-.444 27.72 27.72 0 0 0-1.007-.436c-.918-.383-1.602-.852-2.053-1.405-.45-.553-.676-1.222-.676-2.005 0-.614.123-1.141.369-1.582.246-.441.58-.804 1.004-1.089a4.494 4.494 0 0 1 1.47-.629 7.536 7.536 0 0 1 1.77-.201zm-15.113.188h9.563v2.166H9.506v9.646H6.789v-9.646H3.375z"/>
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
-                TypeScript SDK
-              </button>
-            </div>
-
-            <!-- Code Block -->
-            <CodeBlock 
-              :code="codeTab === 'curl' ? curlCommand : sdkCommand"
-              :language="codeTab === 'curl' ? 'bash' : 'typescript'"
-              @copy="copyCommand"
-            />
-            
-            <p class="text-xs text-gray-400 mt-3 flex items-start gap-2">
-              <svg class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span>Replace <code class="text-white bg-gray-500/15 px-1 py-0.5 rounded">YOUR_AGENT_KEY</code> with your actual agent key.</span>
-            </p>
-
-            <p v-if="codeTab === 'sdk'" class="text-xs text-gray-500 mt-2">
-              Install the SDK: <code class="text-gray-300 bg-gray-500/15 px-1.5 py-0.5 rounded">npm install @entrys/client</code>
-            </p>
-          </div>
-        </template>
-
-        <!-- Missing tools or agents -->
-        <div v-else class="text-center py-10">
-          <div class="relative inline-block mb-4">
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-xl scale-150"></div>
-            <div class="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700/50 flex items-center justify-center">
-              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-          </div>
-          
-          <template v-if="tools.length === 0 && agents.length === 0">
-            <p class="text-white font-medium mb-1">Set up your gateway</p>
-            <p class="text-sm text-gray-400 mb-5">Create a tool and an agent key to get started</p>
-            <div class="flex items-center justify-center gap-3">
-              <NuxtLink to="/tools" class="btn btn-primary text-sm">
-                Create Tool
-              </NuxtLink>
-              <NuxtLink to="/agents" class="btn btn-secondary text-sm">
-                Create Agent
+              </a>
+              <NuxtLink 
+                to="/dashboard" 
+                class="flex items-center gap-2 px-3 py-2 bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 rounded-lg text-xs text-white transition-colors"
+              >
+                <span>Sign In</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
               </NuxtLink>
             </div>
-          </template>
-          
-          <template v-else-if="tools.length === 0">
-            <p class="text-white font-medium mb-1">No tools configured</p>
-            <p class="text-sm text-gray-400 mb-4">Create your first tool to generate a curl command</p>
-            <NuxtLink to="/tools" class="btn btn-primary text-sm">
-              Create Tool
-            </NuxtLink>
-          </template>
-          
-          <template v-else>
-            <p class="text-white font-medium mb-1">No agent keys</p>
-            <p class="text-sm text-gray-400 mb-4">Create an agent key to authenticate requests</p>
-            <NuxtLink to="/agents" class="btn btn-primary text-sm">
-              Create Agent Key
-            </NuxtLink>
-          </template>
-        </div>
-      </div>
-    </div>
-
-    <!-- Log Detail Modal -->
-    <div v-if="selectedLog" class="modal-backdrop" @click.self="closeDetail">
-      <div class="modal max-w-lg">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold">Request Details</h2>
-          <button 
-            class="text-gray-400 hover:text-white transition-colors"
-            @click="closeDetail"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          <!-- Status Badge -->
-          <div class="flex items-center gap-3">
-            <span :class="['badge', getDecisionBadge(selectedLog.decision)]">
-              {{ selectedLog.decision }}
-            </span>
-            <span v-if="selectedLog.statusCode" class="font-mono text-sm" :class="selectedLog.statusCode >= 400 ? 'text-red-400' : ''">
-              Status {{ selectedLog.statusCode }}
-            </span>
-            <span class="font-mono text-sm text-gray-400">{{ selectedLog.latencyMs }}ms</span>
           </div>
-
-          <!-- Details Grid -->
-          <div class="bg-gray-500/10 rounded-lg divide-y divide-gray-500/10">
-            <div class="flex justify-between py-3 px-4">
-              <span class="text-gray-400 text-sm">Time</span>
-              <span class="text-sm">{{ formatDate(selectedLog.createdAt) }}</span>
-            </div>
-            <div class="flex justify-between py-3 px-4">
-              <span class="text-gray-400 text-sm">Request ID</span>
-              <span class="font-mono text-sm">{{ selectedLog.requestId }}</span>
-            </div>
-            <div class="flex justify-between py-3 px-4">
-              <span class="text-gray-400 text-sm">Tool Called</span>
-              <span class="font-mono text-sm">{{ selectedLog.toolName }}</span>
-            </div>
-            <div class="flex justify-between py-3 px-4">
-              <span class="text-gray-400 text-sm">Resolved To</span>
-              <div class="text-right">
-                <span class="font-mono text-sm">{{ selectedLog.logicalName || '-' }}</span>
-                <span v-if="selectedLog.toolVersion" class="text-gray-400 ml-1">{{ selectedLog.toolVersion }}</span>
-                <span 
-                  v-if="selectedLog.backendType" 
-                  :class="['badge ml-2', selectedLog.backendType === 'mcp' ? 'badge-purple' : 'badge-blue']"
+          <p class="text-gray-400 text-sm max-w-sm">Give your AI agents a single entry point to access internal APIs and tools.</p>
+        </div>
+      </header>
+      <section class="max-w-4xl mx-auto px-6 py-16 pt-0 relative z-10">
+        <div class="bg-gray-500/10 border border-gray-500/10 rounded-xl overflow-hidden relative z-10">
+          <div class="bg-gray-500/10 px-4 py-2 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-red-400/80"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-300/80"></div>
+                <div class="w-3 h-3 rounded-full bg-green-300/80"></div>
+              </div>
+              <span class="text-sm text-gray-400 font-mono">app.ts</span>
+              <div class="flex items-center gap-1 ml-4">
+                <button
+                  @click="codeExampleTab = 'node'"
+                  class="px-3 py-1 text-xs font-medium rounded transition-colors"
+                  :class="codeExampleTab === 'node' 
+                    ? 'bg-gray-500/20 text-white' 
+                    : 'text-gray-500 hover:text-gray-300'"
                 >
-                  {{ selectedLog.backendType }}
-                </span>
+                  Node
+                </button>
+                <button
+                  @click="codeExampleTab = 'curl'"
+                  class="px-3 py-1 text-xs font-medium rounded transition-colors"
+                  :class="codeExampleTab === 'curl' 
+                    ? 'bg-gray-500/20 text-white' 
+                    : 'text-gray-500 hover:text-gray-300'"
+                >
+                  cURL
+                </button>
               </div>
             </div>
-            <div class="flex justify-between py-3 px-4">
-              <span class="text-gray-400 text-sm">Agent</span>
-              <span class="text-sm">{{ selectedLog.agentLabel }}</span>
-            </div>
-            <div class="flex justify-between py-3 px-4">
-              <span class="text-gray-400 text-sm">Redactions</span>
-              <span class="text-sm">{{ formatRedactions(selectedLog.redactions) }}</span>
-            </div>
+            <button
+              @click="copyCodeExample"
+              class="p-2 text-gray-400 hover:text-white transition-colors"
+              title="Copy to clipboard"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
           </div>
 
+          <div class="bg-black/50 p-6">
+            <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed"><code v-html="highlightedCode" :key="codeExampleTab"></code></pre>
+          </div>
         </div>
-
-        <button 
-          class="btn btn-secondary w-full mt-6"
-          @click="closeDetail"
-        >
-          Close
-        </button>
-      </div>
+      </section>
     </div>
+
+    <footer class="border-t border-gray-500/10 mt-auto">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="border-t border-transparent flex flex-col md:flex-row items-center justify-between py-3">
+          <div class="flex items-center justify-center gap-3 relative">
+            <p class="text-xs leading-6 font-medium text-gray-500 xl:text-center">
+              &copy; {{new Date().getFullYear()}} Treadie, Inc.
+            </p>
+          </div>
+          <div
+            class="flex space-x-6 items-center md:mt-0 mt-4"
+          >
+            <a
+              href="https://discord.gg/KqdBcqRk5E"
+              target="_blank"
+              class="text-sm font-semibold leading-6 hover:text-blue-300 text-gray-500"
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true" class="h-5 w-5" fill="currentColor">
+                <path d="M16.238 4.515a14.842 14.842 0 0 0-3.664-1.136.055.055 0 0 0-.059.027 10.35 10.35 0 0 0-.456.938 13.702 13.702 0 0 0-4.115 0 9.479 9.479 0 0 0-.464-.938.058.058 0 0 0-.058-.027c-1.266.218-2.497.6-3.664 1.136a.052.052 0 0 0-.024.02C1.4 8.023.76 11.424 1.074 14.782a.062.062 0 0 0 .024.042 14.923 14.923 0 0 0 4.494 2.272.058.058 0 0 0 .064-.02c.346-.473.654-.972.92-1.496a.057.057 0 0 0-.032-.08 9.83 9.83 0 0 1-1.404-.669.058.058 0 0 1-.029-.046.058.058 0 0 1 .023-.05c.094-.07.189-.144.279-.218a.056.056 0 0 1 .058-.008c2.946 1.345 6.135 1.345 9.046 0a.056.056 0 0 1 .059.007c.09.074.184.149.28.22a.058.058 0 0 1 .023.049.059.059 0 0 1-.028.046 9.224 9.224 0 0 1-1.405.669.058.058 0 0 0-.033.033.056.056 0 0 0 .002.047c.27.523.58 1.022.92 1.495a.056.056 0 0 0 .062.021 14.878 14.878 0 0 0 4.502-2.272.055.055 0 0 0 .016-.018.056.056 0 0 0 .008-.023c.375-3.883-.63-7.256-2.662-10.246a.046.046 0 0 0-.023-.021Zm-9.223 8.221c-.887 0-1.618-.814-1.618-1.814s.717-1.814 1.618-1.814c.908 0 1.632.821 1.618 1.814 0 1-.717 1.814-1.618 1.814Zm5.981 0c-.887 0-1.618-.814-1.618-1.814s.717-1.814 1.618-1.814c.908 0 1.632.821 1.618 1.814 0 1-.71 1.814-1.618 1.814Z"></path>
+              </svg>
+            </a>
+            <a
+              href="https://github.com/treadiehq/entrys"
+              target="_blank"
+              class="text-sm font-semibold leading-6 hover:text-blue-300 text-gray-500"
+            >
+              <svg
+                aria-label="github"
+                viewBox="0 0 14 14"
+                class="h-4 w-4"
+                fill="currentColor"
+              >
+                <path
+                  d="M7 .175c-3.872 0-7 3.128-7 7 0 3.084 2.013 5.71 4.79 6.65.35.066.482-.153.482-.328v-1.181c-1.947.415-2.363-.941-2.363-.941-.328-.81-.787-1.028-.787-1.028-.634-.438.044-.416.044-.416.7.044 1.071.722 1.071.722.635 1.072 1.641.766 2.035.59.066-.459.24-.765.437-.94-1.553-.175-3.193-.787-3.193-3.456 0-.766.262-1.378.721-1.881-.065-.175-.306-.897.066-1.86 0 0 .59-.197 1.925.722a6.754 6.754 0 0 1 1.75-.24c.59 0 1.203.087 1.75.24 1.335-.897 1.925-.722 1.925-.722.372.963.131 1.685.066 1.86.46.48.722 1.115.722 1.88 0 2.691-1.641 3.282-3.194 3.457.24.219.481.634.481 1.29v1.926c0 .197.131.415.481.328C11.988 12.884 14 10.259 14 7.175c0-3.872-3.128-7-7-7z"
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                ></path>
+              </svg>
+            </a>
+            <a
+              href="https://twitter.com/treadieinc"
+              target="_blank"
+              class="hover:text-blue-300 text-gray-500"
+            >
+              <span class="sr-only">X formerly known as Twitter</span>
+              <svg aria-label="X formerly known as Twitter" fill="currentColor" class="h-4 w-4" viewBox="0 0 22 20"><path d="M16.99 0H20.298L13.071 8.26L21.573 19.5H14.916L9.702 12.683L3.736 19.5H0.426L8.156 10.665L0 0H6.826L11.539 6.231L16.99 0ZM15.829 17.52H17.662L5.83 1.876H3.863L15.829 17.52Z" class="astro-3SDC4Q5U"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 </template>

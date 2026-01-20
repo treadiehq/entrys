@@ -10,14 +10,13 @@ npm install @entrys/client
 pnpm add @entrys/client
 ```
 
-## Usage
+## Quick Start
 
 ```typescript
-import { Entry } from "@entrys/client";
+import Entry from "@entrys/client";
 
 const entry = new Entry({
-  apiKey: process.env.AGENT_API_KEY,
-  baseUrl: "https://api.yourproduct.com"
+  apiKey: process.env.ENTRYS_API_KEY
 });
 
 const customer = await entry.invoke("get_customer", {
@@ -28,16 +27,33 @@ console.log(customer);
 // { name: "Jane Doe", email: "[REDACTED]", ... }
 ```
 
+## Configuration
+
+Set your API key pass it directly:
+
+```typescript
+const entry = new Entry({ apiKey: "ent_your_api_key" });
+```
+
+For self-hosted deployments, also set the base URL:
+
+```typescript
+const entry = new Entry({
+  apiKey: process.env.ENTRYS_API_KEY,
+  baseUrl: "http://localhost:3001"
+});
+```
+
 ## API
 
-### `new Entry(options)`
+### `new Entry(options?)`
 
 Create a new entrys client.
 
-**Options:**
-- `apiKey` (string) - Your agent API key (starts with `ent_`)
-- `baseUrl` (string) - Base URL of your entrys gateway
-- `fetch` (optional) - Custom fetch implementation
+**Options (all optional):**
+- `apiKey` - Your agent API key. Defaults to `ENTRYS_API_KEY` env var
+- `baseUrl` - Gateway URL. Defaults to `ENTRYS_BASE_URL` env var or `https://api.entrys.co`
+- `fetch` - Custom fetch implementation
 
 ### `agent.invoke(toolName, options?)`
 

@@ -17,12 +17,15 @@ pnpm up
 
 ## SDK
 
+```bash
+npm install @entrys/client
+```
+
 ```typescript
-import { Entry } from "@entrys/client";
+import Entry from "@entrys/client";
 
 const entry = new Entry({
-  apiKey: process.env.AGENT_API_KEY,
-  baseUrl: "http://localhost:3001"
+  apiKey: process.env.ENTRYS_API_KEY
 });
 
 const customer = await entry.invoke("get_customer", {
@@ -31,21 +34,30 @@ const customer = await entry.invoke("get_customer", {
 // { name: "Jane Doe", email: "[REDACTED]", ... }
 ```
 
+For self-hosted deployments, also pass `baseUrl`:
+
+```typescript
+const entry = new Entry({
+  apiKey: process.env.ENTRYS_API_KEY,
+  baseUrl: "http://localhost:3001"
+});
+```
+
 See [packages/client/README.md](packages/client/README.md) for full SDK docs.
 
 ## API
 
 ```bash
-curl -X POST "http://localhost:3001/v1/invoke/echo_httpbin" \
+curl -X POST "https://api.entrys.co/v1/invoke/get_customer" \
   -H "Content-Type: application/json" \
-  -H "x-api-key: YOUR_AGENT_KEY" \
-  -d '{"input": {"message": "Hello", "email": "user@example.com"}}'
+  -H "x-api-key: $ENTRYS_API_KEY" \
+  -d '{"params": {"id": "123"}}'
 ```
 
 ```json
 {
   "ok": true,
-  "output": { "message": "Hello", "email": "[REDACTED]" },
+  "output": { "name": "Jane Doe", "email": "[REDACTED]" },
   "meta": { "latencyMs": 234, "redactions": [{ "type": "email", "count": 1 }] }
 }
 ```

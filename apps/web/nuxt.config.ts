@@ -4,6 +4,17 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
+  // Prevent caching in development
+  routeRules: {
+    '/': {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    },
+  },
+  
   app: {
     head: {
       htmlAttrs: {
@@ -12,6 +23,16 @@ export default defineNuxtConfig({
       bodyAttrs: {
         style: 'background-color: #000000',
       },
+      link: [
+        {
+          rel: 'preconnect',
+          href: 'https://geistfont.vercel.app',
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://geistfont.vercel.app/geist.css',
+        },
+      ],
     },
   },
   

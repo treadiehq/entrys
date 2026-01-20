@@ -1,14 +1,17 @@
 @import "tailwindcss";
 
+/* Ensure critical layout classes are always included for SSR */
+/* @layer utilities {
+  .flex-1 { flex: 1 1 0%; }
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .h-full { height: 100%; }
+  .relative { position: relative; }
+} */
+
 /* Theme configuration for Tailwind v4 */
 @theme {
   --color-bg: #000000;
-  --color-bg-secondary: #0f0f11;
-  /* --color-bg-tertiary: #18181b;
-  --color-border: #27272a; */
-  --color-text: #fafafa;
-  --color-text-secondary: #71717a;
-  
   --color-accent: #10b981;
   --color-accent-muted: rgba(16, 185, 129, 0.15);
   
@@ -18,16 +21,30 @@
   --color-danger: #ef4444;
   --color-danger-muted: rgba(239, 68, 68, 0.15);
   
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', 'SF Mono', monospace;
 }
 
 /* Base styles */
+html {
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, Inter, Segoe UI, Roboto, Noto Sans, Ubuntu, sans-serif;
+  font-feature-settings: "calt", "dlig", "liga", "kern", "ss01", "ss02", "ss03", "ss04", "ss07", "ss08", "tnum", "cv02", "cv03", "cv04", "cv11";
+  font-synthesis: none;
+  scroll-behavior: smooth;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+body, html {
+  @apply bg-black w-full antialiased;
+  min-height: 100vh;
+  height: 100%;
+  overscroll-behavior: none;
+  @apply text-pretty;
+}
+
 body {
   background-color: var(--color-bg);
   @apply text-white;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -48,6 +65,26 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #3f3f46;
+}
+
+.radial-gradient {
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 1%, rgba(0,0,0,0.000000000000005) 70%);
+}
+
+/* md */
+@media (min-width: 768px) {
+  .radial-gradient {
+    width: 550px;
+    height: 550px;
+  }
+}
+
+/* lg */
+@media (min-width: 1024px) {
+  .radial-gradient {
+    width: 950px;
+    height: 950px;
+  }
 }
 
 /* Card */
