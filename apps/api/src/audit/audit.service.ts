@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { DEMO_TEAM_ID } from '../environments/environments.service';
 import type { RedactionSummary } from '@entrys/shared';
 
 export interface CreateAuditLogDto {
@@ -29,9 +28,12 @@ export class AuditService {
     decision?: 'allow' | 'deny' | 'error';
     agentKeyId?: string;
     limit?: number;
-    teamId?: string;
   }) {
-    const { envId, tool, logicalName, decision, agentKeyId, limit = 50, teamId = DEMO_TEAM_ID } = options;
+    const { envId, tool, logicalName, decision, agentKeyId, limit = 50 } = options;
+    
+    // Get teamId from the environment
+    const env = await this.prisma.environment.findUnique({ where: { id: envId } });
+    const teamId = env?.teamId;
 
     const logs = await this.prisma.auditLog.findMany({
       where: {
@@ -71,7 +73,7 @@ export class AuditService {
     }));
   }
 
-  async create(dto: CreateAuditLogDto, teamId: string = DEMO_TEAM_ID) {
+  async create(dto: CreateAuditLogDto, teamId: string) {
     return this.prisma.auditLog.create({
       data: {
         teamId,

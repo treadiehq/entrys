@@ -1,11 +1,13 @@
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
+  const query = getQuery(event)
   const config = useRuntimeConfig()
   
-  const response = await $fetch(`${config.public.apiUrl}/v1/tools/${id}/activate`, {
+  const response = await $fetch(`${config.apiUrl}/v1/tools/${id}/activate`, {
     method: 'POST',
+    query: { teamId: query.teamId },
     headers: {
-      'x-admin-key': process.env.ADMIN_KEY || 'dev-admin-key',
+      'x-admin-key': config.adminKey,
     },
   })
   

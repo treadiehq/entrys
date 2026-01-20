@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const env = useState<'staging' | 'prod'>('currentEnv', () => 'staging')
+const { user, team, userInitials, isLoaded, isAuthenticated, loadFromStorage, logout } = useAuth()
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard' },
@@ -8,6 +9,41 @@ const navItems = [
   { path: '/agents', label: 'Agents' },
   { path: '/audit', label: 'Audit Log' },
 ]
+
+const showUserMenu = ref(false)
+
+// Load auth state and check authentication on mount
+onMounted(() => {
+  loadFromStorage()
+  
+  // Redirect to login if not authenticated
+  nextTick(() => {
+    if (!localStorage.getItem('sessionToken')) {
+      navigateTo('/login')
+    }
+  })
+})
+
+// Close menu when clicking outside
+function handleClickOutside(event: MouseEvent) {
+  const target = event.target as HTMLElement
+  if (!target.closest('.user-menu-container')) {
+    showUserMenu.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+async function handleLogout() {
+  showUserMenu.value = false
+  await logout()
+}
 </script>
 
 <template>
@@ -22,7 +58,7 @@ const navItems = [
             </svg>
           </NuxtLink>
           <span class="text-gray-500/50">/</span>
-          <span class="font-medium text-sm text-white">entrys</span>
+          <span class="font-medium text-sm text-white">{{ team?.name || 'entrys' }}</span>
         </div>
 
         <!-- Navigation -->
@@ -66,9 +102,36 @@ const navItems = [
             </button>
           </div>
           
-          <!-- User Avatar -->
-          <div class="w-7 h-7 rounded-full bg-amber-300/20 border border-amber-300/10 flex items-center justify-center text-xs font-medium text-white">
-            D
+          <!-- User Avatar with Dropdown -->
+          <div class="relative user-menu-container">
+            <button
+              @click.stop="showUserMenu = !showUserMenu"
+              class="w-7 h-7 rounded-full bg-amber-300/20 border border-amber-300/10 flex items-center justify-center text-xs font-medium text-white hover:bg-amber-300/30 transition-colors"
+            >
+              {{ userInitials }}
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div
+              v-if="showUserMenu"
+              class="absolute right-0 top-full mt-2 w-64 bg-black border border-gray-500/20 rounded-lg shadow-xl overflow-hidden z-50"
+            >
+              <div class="px-4 py-3 border-b border-gray-500/20">
+                <p class="text-xs text-gray-500">Signed in as</p>
+                <p class="text-sm text-white truncate mt-0.5">{{ user?.email || 'Unknown' }}</p>
+              </div>
+              <div class="py-1">
+                <button
+                  @click="handleLogout"
+                  class="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-500/10 hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Log out
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

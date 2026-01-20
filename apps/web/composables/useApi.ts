@@ -1,5 +1,6 @@
 export function useApi() {
   const env = useState<'staging' | 'prod'>('currentEnv', () => 'staging')
+  const { team } = useAuth()
   
   async function fetchApi<T>(
     endpoint: string, 
@@ -11,10 +12,15 @@ export function useApi() {
   ): Promise<T> {
     const { method = 'GET', body, query } = options
     
-    // Build query string with env
+    // Build query string with env and teamId (skip for auth endpoints)
     const queryParams = new URLSearchParams()
-    if (endpoint.includes('env=') === false && !endpoint.startsWith('/api/envs')) {
+    const isAuthEndpoint = endpoint.startsWith('/auth/')
+    if (!isAuthEndpoint && endpoint.includes('env=') === false && !endpoint.startsWith('/api/envs')) {
       queryParams.set('env', env.value)
+    }
+    // Add team ID for non-auth endpoints
+    if (!isAuthEndpoint && team.value?.id) {
+      queryParams.set('teamId', team.value.id)
     }
     if (query) {
       for (const [key, value] of Object.entries(query)) {

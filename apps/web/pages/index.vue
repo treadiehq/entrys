@@ -236,12 +236,12 @@ const highlightedCode = computed(() => {
                 </svg>
               </a>
               <NuxtLink 
-                to="/dashboard" 
+                to="/login" 
                 class="flex items-center gap-2 px-3 py-2 bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 rounded-lg text-xs text-white transition-colors"
               >
                 <span>Sign In</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM6.75 9.25a.75.75 0 0 0 0 1.5h4.59l-2.1 1.95a.75.75 0 0 0 1.02 1.1l3.5-3.25a.75.75 0 0 0 0-1.1l-3.5-3.25a.75.75 0 1 0-1.02 1.1l2.1 1.95H6.75Z" clip-rule="evenodd" />
                 </svg>
               </NuxtLink>
             </div>

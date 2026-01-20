@@ -7,10 +7,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  memberships  TeamMember[]
+  magicLinks   MagicLinkToken[]
+  sessions     Session[]
+}
+
+model TeamMember {
+  id        String         @id @default(uuid())
+  userId    String
+  teamId    String
+  role      TeamMemberRole @default(member)
+  createdAt DateTime       @default(now())
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+}
+
+enum TeamMemberRole {
+  owner
+  admin
+  member
+}
+
+model MagicLinkToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  email     String
+  userId    String?
+  teamName  String?  // For signup: the org name to create
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
 model Team {
   id            String         @id @default(uuid())
-  name          String
+  name          String         @unique
   createdAt     DateTime       @default(now())
+  members       TeamMember[]
   environments  Environment[]
   agentKeys     AgentKey[]
   tools         Tool[]

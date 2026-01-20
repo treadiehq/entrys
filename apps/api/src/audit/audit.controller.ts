@@ -20,6 +20,7 @@ export class AuditController {
   @Get()
   async findAll(
     @Query('env') envName: string,
+    @Query('teamId') teamId: string,
     @Query('tool') tool?: string,
     @Query('decision') decision?: 'allow' | 'deny' | 'error',
     @Query('agentKeyId') agentKeyId?: string,
@@ -28,7 +29,10 @@ export class AuditController {
     if (!envName) {
       throw new BadRequestException('env query parameter is required');
     }
-    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod');
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod', teamId);
     if (!env) {
       throw new BadRequestException('Invalid environment');
     }

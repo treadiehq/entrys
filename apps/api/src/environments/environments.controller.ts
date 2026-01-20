@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { EnvironmentsService } from './environments.service';
 import { AdminKeyGuard } from '../auth/guards/admin-key.guard';
 
@@ -8,7 +8,10 @@ export class EnvironmentsController {
   constructor(private environmentsService: EnvironmentsService) {}
 
   @Get()
-  async findAll() {
-    return this.environmentsService.findAll();
+  async findAll(@Query('teamId') teamId: string) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.environmentsService.findAll(teamId);
   }
 }

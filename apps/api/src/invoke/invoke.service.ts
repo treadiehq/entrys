@@ -309,7 +309,7 @@ export class InvokeService {
         statusCode: params.statusCode,
         latencyMs: params.latencyMs,
         redactions: params.redactions,
-      });
+      }, params.agentKey.teamId);
 
       // Fan-out to webhooks (async, non-blocking)
       const webhookPayload: AuditWebhookPayload = {

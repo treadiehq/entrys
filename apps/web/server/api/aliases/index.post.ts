@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   
   const response = await $fetch(`${config.apiUrl}/v1/aliases`, {
     method: 'POST',
-    query: { env: query.env },
+    query: { env: query.env, teamId: query.teamId },
     headers: {
       'x-admin-key': config.adminKey,
       'Content-Type': 'application/json',
