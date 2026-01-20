@@ -69,7 +69,7 @@ function highlightBash(code: string): string {
       
       if (line[i] === '-' && i > 0 && line[i-1] === ' ' && /[A-Za-z]/.test(line[i+1] || '')) {
         const flag = '-' + line[i+1]
-        result += span('text-yellow-300', flag)
+        result += span('text-yellow-200', flag)
         i += 2
         continue
       }
@@ -182,7 +182,7 @@ function highlightTypeScriptLine(line: string): string {
       if (keywords.has(token.value)) {
         result += span('text-purple-300', token.value)
       } else if (/^[A-Z]/.test(token.value)) {
-        result += span('text-yellow-300', token.value)
+        result += span('text-yellow-200', token.value)
       } else if (token.value === 'console') {
         result += span('text-cyan-300', token.value)
       } else if (nextToken && nextToken.value === '(') {
