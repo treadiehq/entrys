@@ -87,4 +87,4 @@ pnpm status   # Check service status
 
 ## License
 
-MIT
+[FSL-1.1-MIT](LICENSE)
