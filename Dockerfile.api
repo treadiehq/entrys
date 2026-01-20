@@ -45,16 +45,15 @@ COPY --from=builder /app/pnpm-lock.yaml ./
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Install all dependencies (need prisma CLI to generate client)
+RUN pnpm install --frozen-lockfile
 
-# Copy built files
+# Copy built files and prisma schema
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/node_modules/.pnpm/@prisma+client* ./node_modules/.pnpm/
 
-# Generate Prisma client in production
+# Generate Prisma client
 WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
 
