@@ -19,20 +19,38 @@ export class PoliciesController {
   constructor(private policiesService: PoliciesService) {}
 
   @Get()
-  async findByTool(@Query('toolId') toolId: string) {
+  async findByTool(
+    @Query('toolId') toolId: string,
+    @Query('teamId') teamId: string,
+  ) {
     if (!toolId) {
       throw new BadRequestException('toolId query parameter is required');
     }
-    return this.policiesService.findByToolId(toolId);
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.policiesService.findByToolId(toolId, teamId);
   }
 
   @Post()
-  async create(@Body() dto: CreateToolPolicyDto) {
-    return this.policiesService.create(dto);
+  async create(
+    @Query('teamId') teamId: string,
+    @Body() dto: CreateToolPolicyDto,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.policiesService.create(dto, teamId);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.policiesService.delete(id);
+  async delete(
+    @Param('id') id: string,
+    @Query('teamId') teamId: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.policiesService.delete(id, teamId);
   }
 }

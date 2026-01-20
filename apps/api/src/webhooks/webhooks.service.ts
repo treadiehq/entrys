@@ -1,6 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { DEMO_TEAM_ID } from '../environments/environments.service';
 import type { AuditWebhookPayload } from '@entrys/shared';
 
 interface CreateWebhookDto {
@@ -15,14 +14,14 @@ export class WebhooksService {
 
   constructor(private prisma: PrismaService) {}
 
-  async findAll(teamId: string = DEMO_TEAM_ID) {
+  async findAll(teamId: string) {
     return this.prisma.auditWebhook.findMany({
       where: { teamId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async create(dto: CreateWebhookDto, teamId: string = DEMO_TEAM_ID) {
+  async create(dto: CreateWebhookDto, teamId: string) {
     return this.prisma.auditWebhook.create({
       data: {
         teamId,
@@ -33,8 +32,10 @@ export class WebhooksService {
     });
   }
 
-  async update(id: string, data: Partial<CreateWebhookDto>) {
-    const webhook = await this.prisma.auditWebhook.findUnique({ where: { id } });
+  async update(id: string, data: Partial<CreateWebhookDto>, teamId: string) {
+    const webhook = await this.prisma.auditWebhook.findFirst({
+      where: { id, teamId },
+    });
     if (!webhook) {
       throw new NotFoundException('Webhook not found');
     }
@@ -44,8 +45,10 @@ export class WebhooksService {
     });
   }
 
-  async delete(id: string) {
-    const webhook = await this.prisma.auditWebhook.findUnique({ where: { id } });
+  async delete(id: string, teamId: string) {
+    const webhook = await this.prisma.auditWebhook.findFirst({
+      where: { id, teamId },
+    });
     if (!webhook) {
       throw new NotFoundException('Webhook not found');
     }
@@ -57,7 +60,7 @@ export class WebhooksService {
    * Fan-out audit events to configured webhooks
    * This is called asynchronously and never blocks the invoke response
    */
-  async fanOutAuditEvent(payload: AuditWebhookPayload, teamId: string = DEMO_TEAM_ID): Promise<void> {
+  async fanOutAuditEvent(payload: AuditWebhookPayload, teamId: string): Promise<void> {
     const webhooks = await this.prisma.auditWebhook.findMany({
       where: { teamId, isEnabled: true },
     });

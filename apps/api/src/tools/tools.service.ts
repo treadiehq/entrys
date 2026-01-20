@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateToolDto, UpdateToolDto } from './dto/tool.dto';
-import { DEMO_TEAM_ID } from '../environments/environments.service';
 
 // Helper type for mapping allowed agents with included agentKey
 type AllowedAgentWithKey = {
@@ -22,7 +21,7 @@ function mapAllowedAgents(agents: AllowedAgentWithKey[]) {
 export class ToolsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(envId: string, teamId: string = DEMO_TEAM_ID, logicalName?: string) {
+  async findAll(envId: string, teamId: string, logicalName?: string) {
     const tools = await this.prisma.tool.findMany({
       where: { 
         envId, 
@@ -47,9 +46,9 @@ export class ToolsService {
     }));
   }
 
-  async findById(id: string) {
-    const tool = await this.prisma.tool.findUnique({
-      where: { id },
+  async findById(id: string, teamId: string) {
+    const tool = await this.prisma.tool.findFirst({
+      where: { id, teamId },
       include: {
         allowedAgents: {
           include: {
@@ -73,7 +72,7 @@ export class ToolsService {
    * Resolve a tool name (or alias) to the active version
    * Resolution order: alias → logicalName → active version → backend
    */
-  async resolveActiveVersion(nameOrAlias: string, envId: string, teamId: string = DEMO_TEAM_ID) {
+  async resolveActiveVersion(nameOrAlias: string, envId: string, teamId: string) {
     // First, check if it's an alias
     const alias = await this.prisma.toolAlias.findFirst({
       where: { alias: nameOrAlias, envId, teamId },
@@ -97,12 +96,12 @@ export class ToolsService {
   /**
    * @deprecated Use resolveActiveVersion instead. Kept for backwards compatibility.
    */
-  async findByName(name: string, envId: string) {
+  async findByName(name: string, envId: string, teamId: string) {
     // Now resolves using logical name and active version
-    return this.resolveActiveVersion(name, envId);
+    return this.resolveActiveVersion(name, envId, teamId);
   }
 
-  async create(envId: string, dto: CreateToolDto, teamId: string = DEMO_TEAM_ID) {
+  async create(envId: string, dto: CreateToolDto, teamId: string) {
     // Check for duplicate logicalName + version in same env
     const existing = await this.prisma.tool.findFirst({
       where: { logicalName: dto.logicalName, version: dto.version, envId, teamId },
@@ -167,8 +166,8 @@ export class ToolsService {
     };
   }
 
-  async update(id: string, dto: UpdateToolDto) {
-    const tool = await this.findById(id);
+  async update(id: string, dto: UpdateToolDto, teamId: string) {
+    const tool = await this.findById(id, teamId);
 
     // Handle allowed agents update
     if (dto.allowedAgentIds !== undefined) {
@@ -218,8 +217,8 @@ export class ToolsService {
    * Activate a specific tool version
    * Deactivates all other versions of the same logical tool
    */
-  async activate(id: string) {
-    const tool = await this.findById(id);
+  async activate(id: string, teamId: string) {
+    const tool = await this.findById(id, teamId);
 
     if (tool.isActive) {
       return tool; // Already active
@@ -259,8 +258,8 @@ export class ToolsService {
    * Deactivate a tool version
    * Warning: This leaves no active version for the logical tool
    */
-  async deactivate(id: string) {
-    const tool = await this.findById(id);
+  async deactivate(id: string, teamId: string) {
+    const tool = await this.findById(id, teamId);
 
     if (!tool.isActive) {
       return tool; // Already inactive
@@ -287,15 +286,15 @@ export class ToolsService {
   /**
    * Get the currently active version for a logical tool name
    */
-  async getActiveVersion(logicalName: string, envId: string, teamId: string = DEMO_TEAM_ID) {
+  async getActiveVersion(logicalName: string, envId: string, teamId: string) {
     const tool = await this.prisma.tool.findFirst({
       where: { logicalName, envId, teamId, isActive: true },
     });
     return tool;
   }
 
-  async delete(id: string) {
-    const tool = await this.findById(id);
+  async delete(id: string, teamId: string) {
+    const tool = await this.findById(id, teamId);
     await this.prisma.tool.delete({
       where: { id: tool.id },
     });

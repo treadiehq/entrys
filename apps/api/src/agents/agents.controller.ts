@@ -22,11 +22,17 @@ export class AgentsController {
   ) {}
 
   @Get()
-  async findAll(@Query('env') envName: string) {
+  async findAll(
+    @Query('env') envName: string,
+    @Query('teamId') teamId: string,
+  ) {
     if (!envName) {
       throw new BadRequestException('env query parameter is required');
     }
-    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod');
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod', teamId);
     if (!env) {
       throw new BadRequestException('Invalid environment');
     }
@@ -34,11 +40,18 @@ export class AgentsController {
   }
 
   @Post()
-  async create(@Query('env') envName: string, @Body() dto: CreateAgentKeyDto) {
+  async create(
+    @Query('env') envName: string,
+    @Query('teamId') teamId: string,
+    @Body() dto: CreateAgentKeyDto,
+  ) {
     if (!envName) {
       throw new BadRequestException('env query parameter is required');
     }
-    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod');
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod', teamId);
     if (!env) {
       throw new BadRequestException('Invalid environment');
     }
@@ -46,7 +59,13 @@ export class AgentsController {
   }
 
   @Post(':id/revoke')
-  async revoke(@Param('id') id: string) {
-    return this.agentsService.revoke(id);
+  async revoke(
+    @Param('id') id: string,
+    @Query('teamId') teamId: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.agentsService.revoke(id, teamId);
   }
 }

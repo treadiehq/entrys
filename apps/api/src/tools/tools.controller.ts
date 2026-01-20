@@ -26,12 +26,16 @@ export class ToolsController {
   @Get()
   async findAll(
     @Query('env') envName: string,
+    @Query('teamId') teamId: string,
     @Query('logicalName') logicalName?: string,
   ) {
     if (!envName) {
       throw new BadRequestException('env query parameter is required');
     }
-    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod');
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod', teamId);
     if (!env) {
       throw new BadRequestException('Invalid environment');
     }
@@ -39,11 +43,18 @@ export class ToolsController {
   }
 
   @Post()
-  async create(@Query('env') envName: string, @Body() dto: CreateToolDto) {
+  async create(
+    @Query('env') envName: string,
+    @Query('teamId') teamId: string,
+    @Body() dto: CreateToolDto,
+  ) {
     if (!envName) {
       throw new BadRequestException('env query parameter is required');
     }
-    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod');
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod', teamId);
     if (!env) {
       throw new BadRequestException('Invalid environment');
     }
@@ -51,13 +62,26 @@ export class ToolsController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateToolDto) {
-    return this.toolsService.update(id, dto);
+  async update(
+    @Param('id') id: string,
+    @Query('teamId') teamId: string,
+    @Body() dto: UpdateToolDto,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.toolsService.update(id, dto, teamId);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.toolsService.delete(id);
+  async delete(
+    @Param('id') id: string,
+    @Query('teamId') teamId: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.toolsService.delete(id, teamId);
   }
 
   /**
@@ -65,8 +89,14 @@ export class ToolsController {
    * This deactivates all other versions of the same logical tool
    */
   @Post(':id/activate')
-  async activate(@Param('id') id: string) {
-    return this.toolsService.activate(id);
+  async activate(
+    @Param('id') id: string,
+    @Query('teamId') teamId: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.toolsService.activate(id, teamId);
   }
 
   /**
@@ -74,7 +104,13 @@ export class ToolsController {
    * Warning: leaves no active version for the logical tool
    */
   @Post(':id/deactivate')
-  async deactivate(@Param('id') id: string) {
-    return this.toolsService.deactivate(id);
+  async deactivate(
+    @Param('id') id: string,
+    @Query('teamId') teamId: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.toolsService.deactivate(id, teamId);
   }
 }

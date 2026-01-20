@@ -1,26 +1,25 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { DEMO_TEAM_ID } from '../environments/environments.service';
 import { CreateToolAliasDto } from './dto/create-alias.dto';
 
 @Injectable()
 export class AliasesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(envId: string, teamId: string = DEMO_TEAM_ID) {
+  async findAll(envId: string, teamId: string) {
     return this.prisma.toolAlias.findMany({
       where: { envId, teamId },
       orderBy: { alias: 'asc' },
     });
   }
 
-  async findByAlias(alias: string, envId: string, teamId: string = DEMO_TEAM_ID) {
+  async findByAlias(alias: string, envId: string, teamId: string) {
     return this.prisma.toolAlias.findFirst({
       where: { alias, envId, teamId },
     });
   }
 
-  async create(envId: string, dto: CreateToolAliasDto, teamId: string = DEMO_TEAM_ID) {
+  async create(envId: string, dto: CreateToolAliasDto, teamId: string) {
     // Check if alias already exists
     const existing = await this.prisma.toolAlias.findFirst({
       where: { alias: dto.alias, envId, teamId },
@@ -47,9 +46,9 @@ export class AliasesService {
     });
   }
 
-  async delete(id: string) {
-    const alias = await this.prisma.toolAlias.findUnique({
-      where: { id },
+  async delete(id: string, teamId: string) {
+    const alias = await this.prisma.toolAlias.findFirst({
+      where: { id, teamId },
     });
     if (!alias) {
       throw new NotFoundException('Alias not found');
@@ -65,7 +64,7 @@ export class AliasesService {
    * Resolve an alias to its logical name
    * Returns the logicalName if found, otherwise returns the original name
    */
-  async resolveAlias(nameOrAlias: string, envId: string, teamId: string = DEMO_TEAM_ID): Promise<string> {
+  async resolveAlias(nameOrAlias: string, envId: string, teamId: string): Promise<string> {
     const alias = await this.prisma.toolAlias.findFirst({
       where: { alias: nameOrAlias, envId, teamId },
     });

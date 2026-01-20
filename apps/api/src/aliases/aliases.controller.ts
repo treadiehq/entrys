@@ -23,11 +23,17 @@ export class AliasesController {
   ) {}
 
   @Get()
-  async findAll(@Query('env') envName: string) {
+  async findAll(
+    @Query('env') envName: string,
+    @Query('teamId') teamId: string,
+  ) {
     if (!envName) {
       throw new BadRequestException('env query parameter is required');
     }
-    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod');
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod', teamId);
     if (!env) {
       throw new BadRequestException('Invalid environment');
     }
@@ -35,11 +41,18 @@ export class AliasesController {
   }
 
   @Post()
-  async create(@Query('env') envName: string, @Body() dto: CreateToolAliasDto) {
+  async create(
+    @Query('env') envName: string,
+    @Query('teamId') teamId: string,
+    @Body() dto: CreateToolAliasDto,
+  ) {
     if (!envName) {
       throw new BadRequestException('env query parameter is required');
     }
-    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod');
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    const env = await this.environmentsService.findByName(envName as 'staging' | 'prod', teamId);
     if (!env) {
       throw new BadRequestException('Invalid environment');
     }
@@ -47,7 +60,13 @@ export class AliasesController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.aliasesService.delete(id);
+  async delete(
+    @Param('id') id: string,
+    @Query('teamId') teamId: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('teamId query parameter is required');
+    }
+    return this.aliasesService.delete(id, teamId);
   }
 }
