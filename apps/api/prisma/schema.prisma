@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id            String         @id @default(uuid())
+  name          String
+  createdAt     DateTime       @default(now())
+  environments  Environment[]
+  agentKeys     AgentKey[]
+  tools         Tool[]
+  toolAliases   ToolAlias[]
+  auditLogs     AuditLog[]
+  auditWebhooks AuditWebhook[]
+}
+
+model Environment {
+  id          String          @id @default(uuid())
+  teamId      String
+  name        EnvironmentName
+  createdAt   DateTime        @default(now())
+  team        Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  agentKeys   AgentKey[]
+  tools       Tool[]
+  toolAliases ToolAlias[]
+  auditLogs   AuditLog[]
+
+  @@unique([teamId, name])
+}
+
+enum EnvironmentName {
+  staging
+  prod
+}
+
+model AgentKey {
+  id          String            @id @default(uuid())
+  teamId      String
+  envId       String
+  name        String
+  keyHash     String
+  keyPrefix   String            @db.VarChar(20)
+  isRevoked   Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  lastUsedAt  DateTime?
+  team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  environment Environment       @relation(fields: [envId], references: [id], onDelete: Cascade)
+  policies    ToolPolicy[]
+  auditLogs   AuditLog[]
+  toolAccess  ToolAgentAccess[]
+
+  @@index([keyPrefix])
+  @@index([envId])
+}
+
+model Tool {
+  id               String            @id @default(uuid())
+  teamId           String
+  envId            String
+  logicalName      String            @db.VarChar(100) // Stable name agents call
+  version          String            @db.VarChar(20)  // e.g., "v1", "v2"
+  displayName      String
+  type             ToolType          @default(http)
+  method           HttpMethod        @default(POST)
+  urlTemplate      String                              // For MCP: the MCP server URL
+  headersJson      String?           @db.Text
+  mcpToolName      String?           @db.VarChar(100)  // For MCP: the tool name to call on the server
+  allowAllAgents   Boolean           @default(true)
+  redactionEnabled Boolean           @default(true)
+  isActive         Boolean           @default(false)   // Only one active per logicalName per env
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  team             Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  environment      Environment       @relation(fields: [envId], references: [id], onDelete: Cascade)
+  policies         ToolPolicy[]
+  allowedAgents    ToolAgentAccess[]
+
+  @@unique([teamId, envId, logicalName, version])
+  @@index([envId])
+  @@index([envId, logicalName, isActive])
+}
+
+model ToolAlias {
+  id          String      @id @default(uuid())
+  teamId      String
+  envId       String
+  alias       String      @db.VarChar(100)  // Alternative name
+  logicalName String      @db.VarChar(100)  // Points to Tool.logicalName
+  createdAt   DateTime    @default(now())
+  team        Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  environment Environment @relation(fields: [envId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, envId, alias])
+  @@index([envId, alias])
+}
+
+model AuditWebhook {
+  id        String   @id @default(uuid())
+  teamId    String
+  name      String
+  url       String
+  isEnabled Boolean  @default(true)
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+}
+
+model ToolAgentAccess {
+  id         String   @id @default(uuid())
+  toolId     String
+  agentKeyId String
+  createdAt  DateTime @default(now())
+  tool       Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  agentKey   AgentKey @relation(fields: [agentKeyId], references: [id], onDelete: Cascade)
+
+  @@unique([toolId, agentKeyId])
+  @@index([toolId])
+  @@index([agentKeyId])
+}
+
+enum ToolType {
+  http
+  mcp
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PUT
+  DELETE
+}
+
+model ToolPolicy {
+  id               String       @id @default(uuid())
+  toolId           String
+  agentKeyId       String?
+  agentNamePattern String?
+  action           PolicyAction
+  createdAt        DateTime     @default(now())
+  tool             Tool         @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  agentKey         AgentKey?    @relation(fields: [agentKeyId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
+  @@index([agentKeyId])
+}
+
+enum PolicyAction {
+  allow
+  deny
+}
+
+model AuditLog {
+  id              String        @id @default(uuid())
+  teamId          String
+  envId           String
+  requestId       String        @unique
+  agentKeyId      String?
+  agentLabel      String
+  toolName        String                          // The name agent called (could be alias)
+  logicalName     String?                         // Resolved logical name
+  toolVersion     String?       @db.VarChar(20)   // Resolved version
+  backendType     String?       @db.VarChar(10)   // http or mcp
+  decision        AuditDecision
+  statusCode      Int?
+  latencyMs       Int
+  redactionsJson  String        @db.Text
+  createdAt       DateTime      @default(now())
+  team            Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  environment     Environment   @relation(fields: [envId], references: [id], onDelete: Cascade)
+  agentKey        AgentKey?     @relation(fields: [agentKeyId], references: [id], onDelete: SetNull)
+
+  @@index([envId])
+  @@index([toolName])
+  @@index([logicalName])
+  @@index([createdAt])
+  @@index([agentKeyId])
+}
+
+enum AuditDecision {
+  allow
+  deny
+  error
+}

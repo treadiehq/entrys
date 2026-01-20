@@ -1,0 +1,17 @@
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig()
+  const query = getQuery(event)
+  const body = await readBody(event)
+  
+  const response = await $fetch(`${config.apiUrl}/v1/aliases`, {
+    method: 'POST',
+    query: { env: query.env },
+    headers: {
+      'x-admin-key': config.adminKey,
+      'Content-Type': 'application/json',
+    },
+    body,
+  })
+  
+  return response
+})

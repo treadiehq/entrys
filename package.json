@@ -1,0 +1,29 @@
+{
+  "name": "entrys",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "./scripts/setup.sh",
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "up": "./scripts/start.sh",
+    "down": "./scripts/stop.sh",
+    "reboot": "./scripts/restart.sh",
+    "status": "./scripts/status.sh",
+    "db:generate": "pnpm --filter @entrys/api exec -- prisma generate",
+    "db:migrate": "pnpm --filter @entrys/api exec -- prisma migrate dev",
+    "db:push": "pnpm --filter @entrys/api exec -- prisma db push",
+    "db:seed": "pnpm --filter @entrys/api exec -- prisma db seed"
+  },
+  "devDependencies": {
+    "@oxc-minify/binding-darwin-arm64": "^0.110.0",
+    "@oxc-parser/binding-darwin-arm64": "^0.110.0",
+    "@oxc-transform/binding-darwin-arm64": "^0.110.0",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

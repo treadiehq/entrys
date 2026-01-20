@@ -1,0 +1,376 @@
+@import "tailwindcss";
+
+/* Theme configuration for Tailwind v4 */
+@theme {
+  --color-bg: #000000;
+  --color-bg-secondary: #0f0f11;
+  /* --color-bg-tertiary: #18181b;
+  --color-border: #27272a; */
+  --color-text: #fafafa;
+  --color-text-secondary: #71717a;
+  
+  --color-accent: #10b981;
+  --color-accent-muted: rgba(16, 185, 129, 0.15);
+  
+  --color-warning: #f59e0b;
+  --color-warning-muted: rgba(245, 158, 11, 0.15);
+  
+  --color-danger: #ef4444;
+  --color-danger-muted: rgba(239, 68, 68, 0.15);
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-bg);
+  @apply text-white;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Card */
+.card {
+  @apply bg-gray-500/10 border border-gray-500/10 rounded-lg;
+}
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  @apply bg-blue-300 text-black;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  @apply bg-gray-500/10 border border-gray-500/10 rounded-lg text-white hover:bg-gray-500/20;
+}
+
+.btn-danger {
+  @apply bg-red-500 text-white;
+}
+
+.btn-danger:hover {
+  @apply bg-red-600;
+}
+
+/* Input - Tailwind UI style */
+.input {
+  @apply bg-gray-500/10 border border-gray-500/10 rounded-lg text-white;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  width: 100%;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.input:hover {
+  @apply border-gray-500/20;
+}
+
+.input:focus {
+  outline: none;
+  @apply border-blue-300;
+  @apply shadow-blue-300/10;
+}
+
+.input::placeholder {
+  @apply text-gray-400;
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Select - Tailwind UI style */
+.select {
+  appearance: none;
+  @apply bg-gray-500/10 border border-gray-500/10 rounded-lg text-white;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2371717a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem 1.25rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.select:hover {
+  @apply border-gray-500/20;
+}
+
+.select:focus {
+  outline: none;
+  @apply border-blue-300;
+  @apply shadow-blue-300/10;
+}
+
+.select option {
+  @apply bg-gray-500/10 border border-gray-500/10 rounded-lg text-white;
+  padding: 0.5rem;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-green {
+  @apply bg-green-300/10 text-green-300;
+}
+
+.badge-red {
+  @apply bg-red-400/10 text-red-400;
+}
+
+.badge-yellow {
+  @apply bg-yellow-300/10 text-yellow-300;
+}
+
+.badge-blue {
+  @apply bg-blue-300/10 text-blue-300;
+}
+
+.badge-purple {
+  @apply bg-purple-400/10 text-purple-400;
+}
+
+.badge-gray {
+  @apply bg-gray-500/10 text-gray-400;
+}
+
+/* Status dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-green {
+  @apply bg-green-300;
+}
+
+.status-dot-gray {
+  @apply bg-gray-500;
+}
+
+.status-dot-yellow {
+  @apply bg-yellow-300;
+}
+
+.status-dot-red {
+  @apply bg-red-400;
+}
+
+/* Table styles */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  @apply text-gray-400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  @apply border-b border-gray-500/10;
+}
+
+.table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  @apply border-b border-gray-500/10;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover td {
+  @apply bg-gray-500/20;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  @apply bg-black border border-gray-500/20 rounded-lg;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Code block */
+.code-block {
+  @apply bg-black border! border-gray-500/15! rounded-lg;
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Metric row for cards */
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0;
+  @apply border-gray-500/10;
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-label {
+  font-size: 0.8125rem;
+  @apply text-gray-400;
+}
+
+.metric-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+/* Skeleton loader */
+.skeleton {
+  @apply bg-gray-500/20 rounded animate-pulse;
+}
+
+/* Status animations */
+.status-pulse {
+  animation: pulse-status 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-status {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-dot-online {
+  @apply bg-green-400;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  animation: pulse-online 2s infinite;
+}
+
+@keyframes pulse-online {
+  0% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+  }
+}
+
+.status-dot-offline {
+  @apply bg-gray-500;
+  opacity: 0.6;
+}
+
+/* Button loading state */
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Environment badge */
+.env-badge {
+  @apply text-xs font-medium px-2 py-0.5 rounded-full;
+}
+
+.env-badge-staging {
+  @apply bg-amber-400/10 text-amber-400 border border-amber-400/20;
+}
+
+.env-badge-prod {
+  @apply bg-green-400/10 text-green-400 border border-green-400/20;
+}
+
+/* Pagination */
+.pagination {
+  @apply flex items-center gap-1;
+}
+
+.pagination-btn {
+  @apply px-3 py-1.5 text-sm rounded-lg transition-colors;
+  @apply text-gray-400 hover:text-white hover:bg-gray-500/20;
+}
+
+.pagination-btn:disabled {
+  @apply opacity-40 cursor-not-allowed hover:bg-transparent hover:text-gray-400;
+}
+
+.pagination-btn-active {
+  @apply bg-gray-500/20 text-white;
+}
