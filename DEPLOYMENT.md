@@ -14,9 +14,8 @@ Create 3 services in your Railway project:
 - Railway automatically provides `DATABASE_URL`
 
 ### 2. API Service
-- **Root Directory:** `apps/api`
-- **Build Command:** (uses Dockerfile)
-- **Start Command:** (uses Dockerfile)
+- **Root Directory:** `/` (project root)
+- **Dockerfile Path:** `Dockerfile.api`
 
 **Environment Variables:**
 ```
@@ -30,9 +29,8 @@ PORT=3001
 ```
 
 ### 3. Web Service
-- **Root Directory:** `apps/web`
-- **Build Command:** (uses Dockerfile)
-- **Start Command:** (uses Dockerfile)
+- **Root Directory:** `/` (project root)
+- **Dockerfile Path:** `Dockerfile.web`
 
 **Environment Variables:**
 ```
