@@ -30,8 +30,24 @@ export class EmailService {
       : 'Sign in to Entrys';
     
     const text = type === 'signup'
-      ? `Welcome to Entrys!\n\nClick the link below to verify your email and complete your signup:\n\n${magicLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`
-      : `Click the link below to sign in to Entrys:\n\n${magicLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`;
+      ? `Welcome to Entrys
+
+Click the link below to create your account:
+
+${magicLink}
+
+This link expires in 15 minutes.
+
+If you didn't request this email, you can safely ignore it.`
+      : `Sign in to Entrys
+
+Click the link below to sign in to your account:
+
+${magicLink}
+
+This link expires in 15 minutes.
+
+If you didn't request this email, you can safely ignore it.`;
 
     // In development, log to console
     if (!this.resend || this.config.get<string>('NODE_ENV') !== 'production') {
