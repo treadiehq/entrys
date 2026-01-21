@@ -35,6 +35,38 @@ console.log(result);
   -d '{"params": {"id": "123"}}'`
 }
 
+const copyAsFormats: Record<string, string> = {
+  python: `import requests
+
+response = requests.post(
+    "https://api.entrys.co/v1/invoke/get_customer",
+    headers={
+        "Content-Type": "application/json",
+        "x-api-key": os.environ["ENTRYS_API_KEY"]
+    },
+    json={"params": {"id": "123"}}
+)
+print(response.json())`,
+  fetch: `const response = await fetch("https://api.entrys.co/v1/invoke/get_customer", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": process.env.ENTRYS_API_KEY
+  },
+  body: JSON.stringify({ params: { id: "123" } })
+});
+const data = await response.json();`,
+  go: 'resp, err := http.Post(\n    "https://api.entrys.co/v1/invoke/get_customer",\n    "application/json",\n    bytes.NewBuffer([]byte(`{"params": {"id": "123"}}`)),\n)',
+}
+
+const copyAsOpen = ref(false)
+
+function copyAsFormat(format: string) {
+  navigator.clipboard.writeText(copyAsFormats[format])
+  toast.success('Copied as ' + format)
+  copyAsOpen.value = false
+}
+
 function copyInstallCommand() {
   navigator.clipboard.writeText(installCommands[installTab.value])
   toast.success('Copied to clipboard')
@@ -310,6 +342,44 @@ const highlightedCode = computed(() => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </button>
+          </div>
+
+          <div v-if="codeExampleTab === 'curl'" class="border-t border-gray-500/10 px-4 py-3 flex items-center justify-between">
+            <span class="text-xs text-gray-500">Copy as different format</span>
+            <div class="relative">
+              <button 
+                @click="copyAsOpen = !copyAsOpen"
+                class="text-gray-400 hover:text-white transition-colors text-xs flex items-center gap-1"
+              >
+                Select
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div 
+                v-if="copyAsOpen" 
+                class="absolute bottom-full right-0 mb-2 bg-gray-500/10 border border-gray-500/10 rounded-lg shadow-lg overflow-hidden min-w-[120px]"
+              >
+                <button 
+                  @click="copyAsFormat('python')" 
+                  class="w-full px-3 py-2 text-xs text-left text-gray-300 hover:bg-gray-500/20 transition-colors"
+                >
+                  Python
+                </button>
+                <button 
+                  @click="copyAsFormat('fetch')" 
+                  class="w-full px-3 py-2 text-xs text-left text-gray-300 hover:bg-gray-500/20 transition-colors"
+                >
+                  Fetch
+                </button>
+                <button 
+                  @click="copyAsFormat('go')" 
+                  class="w-full px-3 py-2 text-xs text-left text-gray-300 hover:bg-gray-500/20 transition-colors"
+                >
+                  Go
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
