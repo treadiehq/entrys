@@ -1,5 +1,8 @@
-# Build stage
+# Build stage - force rebuild v5
 FROM node:20-alpine AS builder
+
+# Force cache invalidation
+ARG CACHEBUST=5
 
 RUN corepack enable && corepack prepare pnpm@8 --activate
 
@@ -24,8 +27,11 @@ RUN pnpm build
 
 RUN test -f /app/apps/api/dist/src/main.js
 
-# Production stage - use npm (simpler, no workspace issues)
+# Production stage - use npm (simpler, no workspace issues) v5
 FROM node:20-alpine AS runner
+
+# Force cache invalidation
+ARG CACHEBUST=5
 
 WORKDIR /app
 
