@@ -17,12 +17,25 @@ export default defineNuxtConfig({
   
   app: {
     head: {
+      title: 'Entrys - The entry point for agent tool calls',
       htmlAttrs: {
         style: 'background-color: #000000',
       },
       bodyAttrs: {
         style: 'background-color: #000000',
       },
+      meta: [
+        { name: 'description', content: 'Give your AI agents a single entry point to access internal APIs, MCP servers and services.' },
+        { property: 'og:title', content: 'Entrys - The entry point for agent tool calls' },
+        { property: 'og:description', content: 'Give your AI agents a single entry point to access internal APIs, MCP servers and services.' },
+        { property: 'og:image', content: 'https://entrys.co/entrys.png' },
+        { property: 'og:url', content: 'https://entrys.co' },
+        { property: 'og:type', content: 'website' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: 'Entrys - The entry point for agent tool calls' },
+        { name: 'twitter:description', content: 'Give your AI agents a single entry point to access internal APIs, MCP servers and services.' },
+        { name: 'twitter:image', content: 'https://entrys.co/entrys.png' },
+      ],
       link: [
         {
           rel: 'icon',
