@@ -1,11 +1,8 @@
 # Simplified: run from build directory to avoid pnpm symlink issues
-# timestamp: 2026-01-21-13-35
-# build-id: fix-openssl
+# timestamp: 2026-01-21-13-37
+# build-id: prisma-openssl3
 
 FROM node:20-alpine
-
-# Install OpenSSL 1.1 compatibility library for Prisma
-RUN apk add --no-cache openssl1.1-compat
 
 WORKDIR /app
 
