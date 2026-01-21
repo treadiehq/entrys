@@ -9,9 +9,10 @@ export default defineEventHandler(async (event) => {
     })
     return response
   } catch (error: any) {
-    const message = error.data?.message || error.message || 'Login failed'
+    // Don't leak internal URLs - use data.message if available, otherwise generic error
+    const message = error.data?.message || 'Login failed. Please try again.'
     throw createError({
-      statusCode: error.statusCode || 400,
+      statusCode: error.statusCode || 500,
       message,
     })
   }
