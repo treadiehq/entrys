@@ -37,6 +37,9 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+# Copy package.json for Railway detection
+COPY --from=builder /app/apps/web/package.json /app/package.json
+
 # Copy the entire .output directory
 COPY --from=builder /app/apps/web/.output /app/.output
 
