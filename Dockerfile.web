@@ -40,6 +40,9 @@ WORKDIR /app
 # Copy the entire .output directory (self-contained Nuxt build)
 COPY --from=builder /app/apps/web/.output /app/.output
 
+# Remove package.json to prevent Railway from detecting as Node.js project
+RUN rm -f /app/.output/server/package.json /app/package.json 2>/dev/null || true
+
 # Verify everything is in place
 RUN ls -la /app/.output/server/ && test -f /app/.output/server/index.mjs
 
