@@ -53,9 +53,7 @@ async function handleLogout() {
         <!-- Logo & Workspace -->
         <div class="flex items-center gap-3">
           <NuxtLink to="/dashboard" class="w-6 h-6 rounded-lg bg-gray-500/20 border border-gray-500/10 flex items-center justify-center">
-            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
+            <img src="/img/logo.png" alt="Entrys" class="w-full h-full">
           </NuxtLink>
           <span class="text-gray-500/50">/</span>
           <span class="font-medium text-sm text-white">{{ team?.name || 'entrys' }}</span>
