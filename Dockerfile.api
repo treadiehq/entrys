@@ -1,6 +1,6 @@
 # COMPLETELY NEW STRUCTURE TO BYPASS CACHE
-# timestamp: 2026-01-21-01-12
-# build-id: xyz789
+# timestamp: 2026-01-21-01-15
+# build-id: fix-symlinks
 
 FROM node:20-alpine
 
@@ -30,11 +30,11 @@ WORKDIR /build/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
-# Move to production location
+# Move to production location - use cp -a to preserve pnpm symlinks
 WORKDIR /app
-RUN cp -r /build/apps/api/dist . && \
+RUN cp -a /build/node_modules . && \
+    cp -r /build/apps/api/dist . && \
     cp -r /build/apps/api/prisma . && \
-    cp -r /build/node_modules . && \
     mkdir -p ./node_modules/@entrys/shared && \
     cp -r /build/packages/shared/dist ./node_modules/@entrys/shared/
 
