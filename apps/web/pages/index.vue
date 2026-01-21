@@ -283,7 +283,7 @@ const highlightedCode = computed(() => {
               </NuxtLink>
             </div>
           </div>
-          <p class="text-gray-400 text-sm max-w-sm">Give your AI agents a single entry point to access internal APIs and tools.</p>
+          <p class="text-gray-400 text-sm max-w-md">Give your AI agents a single entry point to access internal APIs, MCP servers and services.</p>
         </div>
       </header>
       <section class="max-w-xl w-full mx-auto py-16 pt-0 relative z-10">
