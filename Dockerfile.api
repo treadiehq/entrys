@@ -1,13 +1,15 @@
-# Build stage - force rebuild v5
-FROM node:20-alpine AS builder
+# COMPLETELY NEW STRUCTURE TO BYPASS CACHE
+# timestamp: 2026-01-21-01-08
 
-# Force cache invalidation
-ARG CACHEBUST=5
+FROM node:20-alpine
 
+# All in one stage to avoid caching issues
+WORKDIR /build
+
+# Install pnpm
 RUN corepack enable && corepack prepare pnpm@8 --activate
 
-WORKDIR /app
-
+# Copy and install
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY tsconfig.base.json ./
 COPY packages/shared/package.json ./packages/shared/
@@ -18,44 +20,36 @@ RUN pnpm install --frozen-lockfile
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
-WORKDIR /app/packages/shared
+# Build shared
+WORKDIR /build/packages/shared
 RUN pnpm build
 
-WORKDIR /app/apps/api
+# Build API
+WORKDIR /build/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
-RUN test -f /app/apps/api/dist/src/main.js
-
-# Production stage - use npm (simpler, no workspace issues) v5
-FROM node:20-alpine AS runner
-
-# Force cache invalidation
-ARG CACHEBUST=5
-
+# Move to production location
 WORKDIR /app
-
-# Copy package.json and remove workspace reference, then install with npm
-COPY apps/api/package.json ./package.json.orig
-RUN cat package.json.orig | sed '/@entrys\/shared/d' > package.json && rm package.json.orig
-
-# Install production deps with npm (no workspace complexity)
-RUN npm install --omit=dev
-
-# Copy prisma and generate client
-COPY apps/api/prisma ./prisma
-RUN npx prisma generate
-
-# Copy built files
-COPY --from=builder /app/apps/api/dist ./dist
+RUN cp -r /build/apps/api/dist . && \
+    cp -r /build/apps/api/prisma . && \
+    cp -r /build/apps/api/node_modules . 2>/dev/null || true && \
+    cp -r /build/node_modules . && \
+    cp -r /build/packages/shared/dist ./node_modules/@entrys/shared/ 2>/dev/null || mkdir -p ./node_modules/@entrys/shared && cp -r /build/packages/shared/dist ./node_modules/@entrys/shared/
 
 # Verify
-RUN test -f /app/dist/src/main.js
-RUN ls -la node_modules/@nestjs/core && echo "=== @nestjs/core found ==="
+RUN echo "=== FRESH BUILD VERIFICATION ===" && \
+    ls -la /app/dist/src/ && \
+    test -f /app/dist/src/main.js && \
+    ls -la /app/node_modules/@nestjs/core && \
+    echo "=== ALL GOOD ==="
+
+# Cleanup build directory
+RUN rm -rf /build
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
 
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "/app/dist/src/main.js"]
