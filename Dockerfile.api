@@ -30,8 +30,8 @@ WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
-# Verify build output exists
-RUN echo "=== Checking build output ===" && ls -la /app/apps/api/dist/ && test -f /app/apps/api/dist/main.js && echo "=== main.js exists ==="
+# Verify build output exists (NestJS puts compiled files in dist/src/)
+RUN echo "=== Checking build output ===" && ls -la /app/apps/api/dist/src/ && test -f /app/apps/api/dist/src/main.js && echo "=== main.js exists ==="
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -48,12 +48,12 @@ COPY --from=builder /app/packages/shared/dist ./node_modules/@entrys/shared/dist
 RUN find /app -name "package.json" -delete 2>/dev/null || true
 
 # Verify everything is in place
-RUN echo "=== Checking runner files ===" && ls -la /app/dist/ && test -f /app/dist/main.js && echo "=== main.js exists ==="
+RUN echo "=== Checking runner files ===" && ls -la /app/dist/src/ && test -f /app/dist/src/main.js && echo "=== main.js exists ==="
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
 
-# Run directly with absolute path
-CMD ["node", "/app/dist/main.js"]
+# Run directly with absolute path (NestJS compiles to dist/src/)
+CMD ["node", "/app/dist/src/main.js"]
