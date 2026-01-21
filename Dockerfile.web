@@ -35,6 +35,9 @@ RUN ls -la .output/server/
 # Production stage
 FROM node:20-alpine AS runner
 
+# Install pnpm for Railway
+RUN corepack enable && corepack prepare pnpm@8 --activate
+
 WORKDIR /app
 
 # Copy package.json for Railway detection
