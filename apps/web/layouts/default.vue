@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import logoImg from '~/assets/img/logo.png'
+
 const route = useRoute()
 const env = useState<'staging' | 'prod'>('currentEnv', () => 'staging')
 const { user, team, userInitials, isLoaded, isAuthenticated, loadFromStorage, logout } = useAuth()
@@ -52,8 +54,12 @@ async function handleLogout() {
       <div class="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between">
         <!-- Logo & Workspace -->
         <div class="flex items-center gap-3">
-          <NuxtLink to="/dashboard" class="w-6 h-6 rounded-lg bg-gray-500/20 border border-gray-500/10 flex items-center justify-center">
-            <img src="/img/logo.png" alt="Entrys" class="w-full h-full">
+          <NuxtLink to="/dashboard" class="flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4">
+              <path d="M4.25 2A2.25 2.25 0 0 0 2 4.25v2a.75.75 0 0 0 1.5 0v-2a.75.75 0 0 1 .75-.75h2a.75.75 0 0 0 0-1.5h-2ZM13.75 2a.75.75 0 0 0 0 1.5h2a.75.75 0 0 1 .75.75v2a.75.75 0 0 0 1.5 0v-2A2.25 2.25 0 0 0 15.75 2h-2ZM3.5 13.75a.75.75 0 0 0-1.5 0v2A2.25 2.25 0 0 0 4.25 18h2a.75.75 0 0 0 0-1.5h-2a.75.75 0 0 1-.75-.75v-2ZM18 13.75a.75.75 0 0 0-1.5 0v2a.75.75 0 0 1-.75.75h-2a.75.75 0 0 0 0 1.5h2A2.25 2.25 0 0 0 18 15.75v-2ZM7 10a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z" />
+            </svg>
+
+            <!-- <img :src="logoImg" alt="Entrys" class="w-full h-full"> -->
           </NuxtLink>
           <span class="text-gray-500/50">/</span>
           <span class="font-medium text-sm text-white">{{ team?.name || 'entrys' }}</span>
