@@ -1,8 +1,5 @@
-# Build stage - v4 (force rebuild)
+# Build stage
 FROM node:20-alpine AS builder
-
-# Cache bust
-ARG CACHEBUST=4
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@8 --activate
@@ -33,45 +30,28 @@ WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
-# Verify build output
-RUN ls -la dist/
+# Verify build output exists
+RUN echo "=== Checking build output ===" && ls -la /app/apps/api/dist/ && test -f /app/apps/api/dist/main.js && echo "=== main.js exists ==="
 
 # Production stage
 FROM node:20-alpine AS runner
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@8 --activate
-
 WORKDIR /app
 
-# Copy package files
-COPY --from=builder /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-lock.yaml ./
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/
-COPY --from=builder /app/apps/api/package.json ./apps/api/
+# Copy everything we need from builder (simpler than reinstalling)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/prisma ./prisma
+COPY --from=builder /app/apps/api/package.json ./package.json
+COPY --from=builder /app/packages/shared/dist ./node_modules/@entrys/shared/dist
 
-# Install all dependencies (need prisma CLI to generate client)
-RUN pnpm install --frozen-lockfile
-
-# Copy built files and prisma schema
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-
-# Verify dist was copied
-RUN ls -la ./apps/api/dist/
-
-# Generate Prisma client
-WORKDIR /app/apps/api
-RUN pnpm exec prisma generate
-
-# Final verification
-RUN ls -la dist/
+# Verify everything is in place
+RUN echo "=== Checking runner files ===" && ls -la /app/dist/ && test -f /app/dist/main.js && echo "=== main.js exists ==="
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
 
-CMD ["node", "dist/main.js"]
+# Run directly with absolute path
+CMD ["node", "/app/dist/main.js"]
