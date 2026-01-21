@@ -30,7 +30,7 @@ WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
-# Verify build output exists (NestJS puts compiled files in dist/src/)
+# Verify build output exists
 RUN echo "=== Checking build output ===" && ls -la /app/apps/api/dist/src/ && test -f /app/apps/api/dist/src/main.js && echo "=== main.js exists ==="
 
 # Production stage
@@ -38,23 +38,38 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Copy everything we need from builder (simpler than reinstalling)
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/prisma ./prisma
-COPY --from=builder /app/packages/shared/dist ./node_modules/@entrys/shared/dist
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@8 --activate
 
-# Remove root package.json to prevent Railway from detecting as Node.js project
-# (keep package.json files inside node_modules - they're needed for module resolution)
-RUN rm -f /app/package.json 2>/dev/null || true
+# Copy package files from builder
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+
+# Install production dependencies fresh (pnpm symlinks don't copy well)
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built dist and prisma
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+
+# Generate Prisma client
+WORKDIR /app/apps/api
+RUN pnpm exec prisma generate
 
 # Verify everything is in place
-RUN echo "=== Checking runner files ===" && ls -la /app/dist/src/ && test -f /app/dist/src/main.js && echo "=== main.js exists ==="
+RUN echo "=== Checking runner files ===" && ls -la /app/apps/api/dist/src/ && test -f /app/apps/api/dist/src/main.js && echo "=== main.js exists ==="
+
+# Remove root package.json to prevent Railway detection (keep others for pnpm)
+RUN rm -f /app/package.json
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
 
-# Run directly with absolute path (NestJS compiles to dist/src/)
-CMD ["node", "/app/dist/src/main.js"]
+# Run from the api directory
+CMD ["node", "/app/apps/api/dist/src/main.js"]
