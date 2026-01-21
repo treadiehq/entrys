@@ -33,9 +33,9 @@ RUN pnpm build
 WORKDIR /app
 RUN cp -r /build/apps/api/dist . && \
     cp -r /build/apps/api/prisma . && \
-    cp -r /build/apps/api/node_modules . 2>/dev/null || true && \
     cp -r /build/node_modules . && \
-    cp -r /build/packages/shared/dist ./node_modules/@entrys/shared/ 2>/dev/null || mkdir -p ./node_modules/@entrys/shared && cp -r /build/packages/shared/dist ./node_modules/@entrys/shared/
+    mkdir -p ./node_modules/@entrys/shared && \
+    cp -r /build/packages/shared/dist ./node_modules/@entrys/shared/
 
 # Verify
 RUN echo "=== FRESH BUILD VERIFICATION ===" && \
