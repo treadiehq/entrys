@@ -1,6 +1,6 @@
 # Simplified: run from build directory to avoid pnpm symlink issues
-# timestamp: 2026-01-21-13-43
-# build-id: install-openssl
+# timestamp: 2026-01-21-14-36
+# build-id: force-migrate
 
 FROM node:20-alpine
 
@@ -41,4 +41,4 @@ ENV PORT=3001
 EXPOSE 3001
 
 # Run migrations and start the application
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+CMD ["sh", "-c", "echo '>>> Running migrations...' && npx prisma migrate deploy && echo '>>> Migrations complete, starting server...' && node dist/src/main.js"]
