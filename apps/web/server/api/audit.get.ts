@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
     headers: {
       'x-admin-key': config.adminKey,
     },
+    timeout: 10000,
   })
   
   return response

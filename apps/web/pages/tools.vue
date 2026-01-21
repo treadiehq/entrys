@@ -478,9 +478,14 @@ onMounted(() => {
         <div class="skeleton h-8 w-full"></div>
       </div>
       
-      <div v-else-if="aliases.length === 0" class="p-6 text-center text-sm text-gray-400">
-        No aliases configured. Aliases let agents call tools by alternative names.
-      </div>
+      <EmptyState
+        v-else-if="aliases.length === 0"
+        icon="alias"
+        title="No aliases configured"
+        description="Aliases let agents call tools by alternative names. Create shortcuts for commonly used tools."
+        actionLabel="+ Add Alias"
+        @action="openAliasModal"
+      />
       
       <table v-else class="table">
         <thead>
@@ -535,7 +540,7 @@ onMounted(() => {
     </div>
 
     <!-- Info Card -->
-    <div class="card p-5 mt-6">
+    <!-- <div class="card p-5 mt-6">
       <h3 class="text-sm font-medium mb-3 flex items-center gap-2">
         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -549,7 +554,7 @@ onMounted(() => {
         <li>Use <strong class="text-white">MCP</strong> type to connect to Model Context Protocol servers.</li>
         <li><strong class="text-white">Aliases</strong> let agents call tools by alternative names.</li>
       </ul>
-    </div>
+    </div> -->
 
     <!-- Alias Modal -->
     <div v-if="showAliasModal" class="modal-backdrop" @click.self="showAliasModal = false">

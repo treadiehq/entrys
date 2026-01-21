@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  icon?: 'tools' | 'agents' | 'logs' | 'activity'
+  icon?: 'tools' | 'agents' | 'logs' | 'activity' | 'alias'
   title: string
   description: string
   actionLabel?: string
@@ -24,6 +24,8 @@ const icons = {
     <line stroke-width="1.5" x1="16" y1="17" x2="8" y2="17"/>
     <polyline stroke-width="1.5" points="10 9 9 9 8 9"/>`,
   activity: `<path stroke-width="1.5" d="M22 12h-4l-3 9L9 3l-3 9H2"/>`,
+  alias: `<path stroke-width="1.5" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+    <path stroke-width="1.5" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>`,
 }
 </script>
 

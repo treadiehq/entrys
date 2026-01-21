@@ -223,7 +223,7 @@ watch(env, () => loadAgents())
     </div>
 
     <!-- Info Card -->
-    <div class="card p-5 mt-6">
+    <!-- <div class="card p-5 mt-6">
       <h3 class="text-sm font-medium mb-3 flex items-center gap-2">
         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -234,7 +234,7 @@ watch(env, () => loadAgents())
         <li>Use the key in the <code class="text-white bg-gray-500/15 px-1.5 py-0.5 rounded">x-api-key</code> header when invoking tools.</li>
         <li>Rate limit: 60 requests per minute per agent/tool combination.</li>
       </ul>
-    </div>
+    </div> -->
 
     <!-- Create Modal -->
     <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false">
