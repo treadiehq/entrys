@@ -45,6 +45,11 @@ function copyCodeExample() {
   toast.success('Copied to clipboard')
 }
 
+function copyNpmInstall() {
+  navigator.clipboard.writeText('npm install @entrys/client')
+  toast.success('Copied to clipboard')
+}
+
 // Use CodeBlock's highlighting logic
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -292,21 +297,26 @@ const highlightedCode = computed(() => {
           </div>
 
           <div class="bg-gray-500/10 p-6 h-[250px]">
-            <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed"><code v-html="highlightedCode" :key="codeExampleTab"></code></pre>
+            <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed">
+              <code v-html="highlightedCode" :key="codeExampleTab"></code>
+            </pre>
           </div>
-        </div>
-        <div class="bg-gray-500/10 border border-gray-500/10 rounded-xl overflow-hidden relative z-10">
-          <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed">
-            <code>
-              npm install @entrys/client
-            </code>
-          </pre>
+
+          <div class="border-t border-gray-500/10 px-4 py-3 flex items-center justify-between">
+            <code class="text-xs text-gray-400 font-mono">npm install @entrys/client</code>
+            <button 
+              @click="copyNpmInstall"
+              class="text-gray-400 hover:text-white transition-colors text-xs"
+            >
+              Copy
+            </button>
+          </div>
         </div>
       </section>
     </div>
 
     <footer class="">
-      <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-0">
         <div class="border-t border-transparent flex flex-col md:flex-row items-center justify-between py-3">
           <div class="flex items-center justify-center gap-3 relative">
             <p class="text-xs leading-6 font-medium text-gray-500 xl:text-center">
