@@ -17,6 +17,7 @@ export function useAuth() {
   // Load auth state from localStorage (client-side only)
   function loadFromStorage() {
     if (import.meta.server) return
+    if (isLoaded.value) return // Already loaded
     
     const storedToken = localStorage.getItem('sessionToken')
     const storedUser = localStorage.getItem('user')
@@ -36,6 +37,11 @@ export function useAuth() {
       } catch {}
     }
     isLoaded.value = true
+  }
+
+  // Auto-load on client side when composable is first used
+  if (import.meta.client && !isLoaded.value) {
+    loadFromStorage()
   }
 
   // Save auth state to localStorage
