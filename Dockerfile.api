@@ -1,75 +1,56 @@
 # Build stage
 FROM node:20-alpine AS builder
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@8 --activate
 
 WORKDIR /app
 
-# Copy workspace config
+# Copy workspace files
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY tsconfig.base.json ./
-
-# Copy package files for all workspaces
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json ./apps/api/
 
-# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
-# Build shared package first
 WORKDIR /app/packages/shared
 RUN pnpm build
 
-# Build API
 WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
-# Verify build output exists
-RUN echo "=== Checking build output ===" && ls -la /app/apps/api/dist/src/ && test -f /app/apps/api/dist/src/main.js && echo "=== main.js exists ==="
+RUN test -f /app/apps/api/dist/src/main.js
 
-# Production stage
+# Production stage - standalone, no workspace
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Install pnpm
+# Copy API package.json and install deps directly (no workspace)
+COPY apps/api/package.json ./package.json
+COPY pnpm-lock.yaml ./
+
 RUN corepack enable && corepack prepare pnpm@8 --activate
+RUN pnpm install --prod --ignore-workspace
 
-# Copy package files from builder
-COPY --from=builder /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-lock.yaml ./
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/
-COPY --from=builder /app/apps/api/package.json ./apps/api/
-
-# Install production dependencies fresh (pnpm symlinks don't copy well)
-RUN pnpm install --frozen-lockfile --prod
-
-# Copy built dist and prisma
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-
-# Generate Prisma client
-WORKDIR /app/apps/api
+# Copy prisma and generate client
+COPY apps/api/prisma ./prisma
 RUN pnpm exec prisma generate
 
-# Verify everything is in place
-RUN echo "=== Checking runner files ===" && ls -la /app/apps/api/dist/src/ && test -f /app/apps/api/dist/src/main.js && echo "=== main.js exists ==="
+# Copy built files
+COPY --from=builder /app/apps/api/dist ./dist
 
-# Remove root package.json to prevent Railway detection (keep others for pnpm)
-RUN rm -f /app/package.json
+# Verify
+RUN test -f /app/dist/src/main.js
+RUN ls -la node_modules/@nestjs/core || echo "WARNING: @nestjs/core not found!"
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
 
-# Run from the api directory
-CMD ["node", "/app/apps/api/dist/src/main.js"]
+CMD ["node", "dist/src/main.js"]
