@@ -44,8 +44,9 @@ COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/prisma ./prisma
 COPY --from=builder /app/packages/shared/dist ./node_modules/@entrys/shared/dist
 
-# Remove any package.json to prevent Railway from detecting as Node.js project
-RUN find /app -name "package.json" -delete 2>/dev/null || true
+# Remove root package.json to prevent Railway from detecting as Node.js project
+# (keep package.json files inside node_modules - they're needed for module resolution)
+RUN rm -f /app/package.json 2>/dev/null || true
 
 # Verify everything is in place
 RUN echo "=== Checking runner files ===" && ls -la /app/dist/src/ && test -f /app/dist/src/main.js && echo "=== main.js exists ==="
