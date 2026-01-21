@@ -38,6 +38,13 @@ export default defineNuxtConfig({
           href: 'https://geistfont.vercel.app/geist.css',
         },
       ],
+      script: [
+        {
+          src: 'https://cdn.seline.com/seline.js',
+          async: true,
+          'data-token': '7daf7b1cd11f5a7',
+        },
+      ],
     },
   },
   
