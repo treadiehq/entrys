@@ -5,7 +5,6 @@ RUN corepack enable && corepack prepare pnpm@8 --activate
 
 WORKDIR /app
 
-# Copy workspace files
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY tsconfig.base.json ./
 COPY packages/shared/package.json ./packages/shared/
@@ -25,28 +24,28 @@ RUN pnpm build
 
 RUN test -f /app/apps/api/dist/src/main.js
 
-# Production stage - standalone, no workspace
+# Production stage - use npm (simpler, no workspace issues)
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Copy API package.json and install deps directly (no workspace)
-COPY apps/api/package.json ./package.json
-COPY pnpm-lock.yaml ./
+# Copy package.json and remove workspace reference, then install with npm
+COPY apps/api/package.json ./package.json.orig
+RUN cat package.json.orig | sed '/@entrys\/shared/d' > package.json && rm package.json.orig
 
-RUN corepack enable && corepack prepare pnpm@8 --activate
-RUN pnpm install --prod --ignore-workspace
+# Install production deps with npm (no workspace complexity)
+RUN npm install --omit=dev
 
 # Copy prisma and generate client
 COPY apps/api/prisma ./prisma
-RUN pnpm exec prisma generate
+RUN npx prisma generate
 
 # Copy built files
 COPY --from=builder /app/apps/api/dist ./dist
 
 # Verify
 RUN test -f /app/dist/src/main.js
-RUN ls -la node_modules/@nestjs/core || echo "WARNING: @nestjs/core not found!"
+RUN ls -la node_modules/@nestjs/core && echo "=== @nestjs/core found ==="
 
 ENV NODE_ENV=production
 ENV PORT=3001
