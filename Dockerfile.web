@@ -1,4 +1,4 @@
-# Build stage
+# Build stage - v2
 FROM node:20-alpine AS builder
 
 # Install pnpm
@@ -29,16 +29,19 @@ RUN pnpm build
 WORKDIR /app/apps/web
 RUN pnpm build
 
+# Verify build output exists
+RUN ls -la .output/server/
+
 # Production stage
 FROM node:20-alpine AS runner
 
-# Enable corepack for pnpm (in case Railway needs it)
-RUN corepack enable && corepack prepare pnpm@8 --activate
-
 WORKDIR /app
 
-# Copy built output
-COPY --from=builder /app/apps/web/.output ./.output
+# Copy the entire .output directory
+COPY --from=builder /app/apps/web/.output /app/.output
+
+# Verify the copy worked
+RUN ls -la /app/.output/server/
 
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -48,4 +51,5 @@ ENV NITRO_PORT=3000
 
 EXPOSE 3000
 
-CMD ["node", ".output/server/index.mjs"]
+# Run the Nuxt server directly
+CMD ["node", "/app/.output/server/index.mjs"]
