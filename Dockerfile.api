@@ -1,6 +1,6 @@
 # COMPLETELY NEW STRUCTURE TO BYPASS CACHE
-# timestamp: 2026-01-21-01-15
-# build-id: fix-symlinks
+# timestamp: 2026-01-21-13-28
+# build-id: debug-symlinks
 
 FROM node:20-alpine
 
@@ -30,6 +30,16 @@ WORKDIR /build/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
+# Debug: Check pnpm node_modules structure before copy
+RUN echo "=== DEBUG: Source node_modules structure ===" && \
+    ls -la /build/node_modules/ | head -30 && \
+    echo "=== .pnpm directory ===" && \
+    ls -la /build/node_modules/.pnpm/ | head -10 && \
+    echo "=== @nestjs symlink ===" && \
+    ls -la /build/node_modules/@nestjs/ && \
+    echo "=== symlink target ===" && \
+    readlink -f /build/node_modules/@nestjs/core || echo "readlink failed"
+
 # Move to production location - use cp -a to preserve pnpm symlinks
 WORKDIR /app
 RUN cp -a /build/node_modules . && \
@@ -38,15 +48,16 @@ RUN cp -a /build/node_modules . && \
     mkdir -p ./node_modules/@entrys/shared && \
     cp -r /build/packages/shared/dist ./node_modules/@entrys/shared/
 
-# Verify
-RUN echo "=== FRESH BUILD VERIFICATION ===" && \
-    ls -la /app/dist/src/ && \
-    test -f /app/dist/src/main.js && \
-    ls -la /app/node_modules/@nestjs/core && \
-    echo "=== ALL GOOD ==="
+# Debug: Check what we have after copy
+RUN echo "=== DEBUG: After copy ===" && \
+    ls -la /app/node_modules/ | head -30 && \
+    echo "=== @nestjs after copy ===" && \
+    ls -la /app/node_modules/@nestjs/ 2>/dev/null || echo "@nestjs dir missing" && \
+    echo "=== .pnpm after copy ===" && \
+    ls -la /app/node_modules/.pnpm/ 2>/dev/null | head -10 || echo ".pnpm dir missing"
 
-# Cleanup build directory
-RUN rm -rf /build
+# Temporarily skip cleanup for debugging
+# RUN rm -rf /build
 
 ENV NODE_ENV=production
 ENV PORT=3001
