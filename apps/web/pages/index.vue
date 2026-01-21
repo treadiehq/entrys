@@ -295,6 +295,13 @@ const highlightedCode = computed(() => {
             <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed"><code v-html="highlightedCode" :key="codeExampleTab"></code></pre>
           </div>
         </div>
+        <div class="bg-gray-500/10 border border-gray-500/10 rounded-xl overflow-hidden relative z-10">
+          <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed">
+            <code>
+              npm install @entrys/client
+            </code>
+          </pre>
+        </div>
       </section>
     </div>
 

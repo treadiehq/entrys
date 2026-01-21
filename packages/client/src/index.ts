@@ -1,7 +1,45 @@
-import type { InvokeResponse, InvokeSuccessResponse, InvokeErrorResponse } from '@entrys/shared';
+/**
+ * Summary of redactions applied to output
+ */
+export interface RedactionSummary {
+  type: string;
+  count: number;
+}
 
-// Re-export types for convenience
-export type { InvokeResponse, InvokeSuccessResponse, InvokeErrorResponse } from '@entrys/shared';
+/**
+ * Successful tool invocation response
+ */
+export interface InvokeSuccessResponse {
+  ok: true;
+  tool: string;
+  output: unknown;
+  meta: {
+    requestId: string;
+    latencyMs: number;
+    redactions: RedactionSummary[];
+    version?: string;
+    backendType?: string;
+  };
+}
+
+/**
+ * Error response from tool invocation
+ */
+export interface InvokeErrorResponse {
+  ok: false;
+  error: {
+    code: 'TOOL_NOT_FOUND' | 'UNAUTHORIZED' | 'UPSTREAM_ERROR' | 'RATE_LIMITED' | 'VALIDATION_ERROR' | 'MCP_ERROR';
+    message: string;
+  };
+  meta: {
+    requestId: string;
+  };
+}
+
+/**
+ * Union type for invoke responses
+ */
+export type InvokeResponse = InvokeSuccessResponse | InvokeErrorResponse;
 
 /**
  * Configuration options for Entry

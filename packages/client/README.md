@@ -1,6 +1,7 @@
-# @entrys/client
+# Entrys
 
-TypeScript client SDK for Entrys.
+Give your AI agents a single entry point to access internal APIs and tools. Redact PII by default, audit every request, and control access, without modifying your existing services.
+
 
 ## Installation
 

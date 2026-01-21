@@ -1,7 +1,7 @@
 {
   "name": "@entrys/client",
-  "version": "1.0.0",
-  "description": "TypeScript client SDK for Entrys",
+  "version": "0.1.0",
+  "description": "TypeScript client for Entrys - the entry point for agent tool calls",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -12,22 +12,41 @@
       "require": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "prepublishOnly": "pnpm build"
   },
   "keywords": [
+    "entrys",
     "agent",
+    "ai",
     "tool",
     "gateway",
     "sdk",
-    "ai"
+    "llm",
+    "security"
   ],
+  "author": "Treadie, Inc",
+  "license": "FSL-1.1-MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/treadiehq/entrys.git",
+    "directory": "packages/client"
+  },
+  "homepage": "https://entrys.co",
+  "bugs": {
+    "url": "https://github.com/treadiehq/entrys/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "tsup": "^8.0.1",
     "typescript": "^5.3.3"
-  },
-  "peerDependencies": {
-    "@entrys/shared": "workspace:*"
   }
 }
