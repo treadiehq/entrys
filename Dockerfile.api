@@ -30,6 +30,9 @@ WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
 RUN pnpm build
 
+# Verify build output
+RUN ls -la dist/
+
 # Production stage
 FROM node:20-alpine AS runner
 
@@ -53,9 +56,15 @@ COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
+# Verify dist was copied
+RUN ls -la ./apps/api/dist/
+
 # Generate Prisma client
 WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
+
+# Final verification
+RUN ls -la dist/
 
 ENV NODE_ENV=production
 ENV PORT=3001
