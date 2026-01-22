@@ -2,6 +2,8 @@
 
 Give your AI agents a single entry point to access internal APIs and tools. Redact PII by default, audit every request, and control access, without modifying your existing services.
 
+**[Try Entrys Cloud →](https://entrys.co)**
+
 ## Quick Start
 
 ```bash
@@ -9,7 +11,7 @@ Give your AI agents a single entry point to access internal APIs and tools. Reda
 pnpm setup
 
 # Run all services
-pnpm up
+pnpm run up
 ```
 
 - **Dashboard**: http://localhost:3000
@@ -20,6 +22,8 @@ pnpm up
 ```bash
 npm install @entrys/client
 ```
+
+By default, the SDK connects to [entrys.co](https://entrys.co). For self-hosted deployments, see below.
 
 ```typescript
 import Entry from "@entrys/client";
@@ -90,11 +94,11 @@ NUXT_PUBLIC_API_URL="http://localhost:3001"
 ## Scripts
 
 ```bash
-pnpm setup    # Initial setup (database, dependencies, schema)
-pnpm up       # Start all services (Docker + API + Web)
-pnpm down     # Stop all services
-pnpm reboot   # Restart all services
-pnpm status   # Check service status
+pnpm setup      # Initial setup (database, dependencies, schema)
+pnpm run up     # Start all services (Docker + API + Web)
+pnpm run down   # Stop all services
+pnpm run reboot # Restart all services
+pnpm run status # Check service status
 ```
 
 ## License
